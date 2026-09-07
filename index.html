@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Control Lechero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --ink:#1F2A24;
+  --ink-soft:#5B6B60;
+  --ink-faint:#8B9A8F;
+  --bg:#F1EEE3;
+  --surface:#FFFFFF;
+  --surface-alt:#E9E4D4;
+  --accent:#C17A2B;
+  --accent-dark:#9C6220;
+  --accent-bg:#F5E9D6;
+  --positive:#4C7A5E;
+  --positive-bg:#E3EEE7;
+  --info:#516B82;
+  --info-bg:#E4EBF0;
+  --danger:#B24438;
+  --danger-bg:#F5E2DF;
+  --warning:#B68A1F;
+  --warning-bg:#F5EDD6;
+  --border:#DFD9C7;
+  --border-soft:#EAE5D6;
+  --radius-sm:6px;
+  --radius:12px;
+  --radius-lg:18px;
+  --shadow:0 2px 10px rgba(31,42,36,.06), 0 1px 2px rgba(31,42,36,.05);
+  --shadow-lg:0 12px 32px rgba(31,42,36,.14);
+  --font-display:'Fraunces', serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+  --sidebar-w:238px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+h1,h2,h3,h4{font-family:var(--font-display);color:var(--ink);margin:0 0 4px;font-weight:600;}
+p{margin:0;}
+button{font-family:var(--font-body);cursor:pointer;}
+input,select,textarea{font-family:var(--font-body);}
+a{color:inherit;}
+::selection{background:var(--accent-bg);}
+
+/* focus visibility */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px;
+}
+
+/* ============ EAR-TAG SIGNATURE CHIP ============ */
+.eartag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:12.5px;font-weight:600;
+  background:var(--surface-alt);color:var(--ink-soft);
+  border:1px solid var(--border);
+  padding:3px 9px 3px 6px;border-radius:5px 5px 5px 5px / 8px 8px 5px 5px;
+  position:relative;letter-spacing:.02em;white-space:nowrap;
+}
+.eartag::before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--border);
+  flex:none;
+}
+.eartag.lg{font-size:14px;padding:5px 12px 5px 8px;}
+
+/* ============ LOGIN ============ */
+#screen-login{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(600px 300px at 15% 0%, var(--accent-bg), transparent 60%),
+    var(--bg);
+  padding:24px;
+}
+.login-card{
+  width:100%;max-width:400px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);padding:36px 32px;
+}
+.login-brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.login-brand .mark{
+  width:38px;height:38px;border-radius:9px;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;color:#F5EFD9;
+  font-family:var(--font-display);font-weight:700;font-size:19px;
+}
+.login-brand .name{font-family:var(--font-display);font-size:19px;font-weight:600;}
+.login-brand .name span{display:block;font-family:var(--font-body);font-size:11.5px;color:var(--ink-faint);font-weight:500;letter-spacing:.03em;}
+.login-card h1{font-size:22px;margin-bottom:6px;}
+.login-sub{color:var(--ink-soft);font-size:13.5px;margin-bottom:22px;}
+.demo-tag{display:inline-block;background:var(--warning-bg);color:var(--warning);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:5px;margin-bottom:18px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+.field select, .field input{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);font-size:14px;color:var(--ink);
+}
+.role-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.role-opt{
+  border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 10px;text-align:center;
+  background:var(--surface);transition:.15s;
+}
+.role-opt.active{border-color:var(--accent);background:var(--accent-bg);}
+.role-opt .ic{font-size:20px;display:block;margin-bottom:4px;}
+.role-opt .lbl{font-weight:700;font-size:13.5px;}
+.role-opt .sub{font-size:11px;color:var(--ink-faint);}
+.btn-primary{
+  width:100%;padding:12px;background:var(--ink);color:#F5EFD9;border:none;border-radius:var(--radius-sm);
+  font-weight:700;font-size:14.5px;letter-spacing:.01em;
+}
+.btn-primary:hover{background:#12190F;}
+
+/* ============ SHELL ============ */
+#app{display:none;}
+#app.on{display:block;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w);flex:none;background:var(--ink);color:#E7E2CF;
+  position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;
+  padding:20px 14px;z-index:40;
+}
+.sidebar .brand{display:flex;align-items:center;gap:9px;padding:4px 8px 20px;}
+.sidebar .brand .mark{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#1F2A24;font-family:var(--font-display);font-weight:700;font-size:16px;flex:none;}
+.sidebar .brand .name{font-family:var(--font-display);font-size:16.5px;font-weight:600;color:#F5EFD9;}
+.sidebar .brand .name span{display:block;font-size:10px;font-weight:500;color:#94A192;font-family:var(--font-body);letter-spacing:.03em;}
+.navgroup{margin-bottom:4px;}
+.navgroup .grouplbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#7C8A79;font-weight:700;padding:14px 10px 6px;}
+.navlink{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13.5px;font-weight:500;
+  color:#CFCBB4;text-decoration:none;margin-bottom:1px;
+}
+.navlink .ic{width:18px;text-align:center;font-size:14.5px;flex:none;}
+.navlink:hover{background:#2B362A;color:#F5EFD9;}
+.navlink.active{background:var(--accent);color:#1F2A24;font-weight:700;}
+.sidebar-foot{margin-top:auto;padding:12px 8px 4px;border-top:1px solid #2E3A2C;}
+.userchip{display:flex;align-items:center;gap:9px;padding:6px;}
+.userchip .av{width:30px;height:30px;border-radius:50%;background:#3A4638;color:#F5EFD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex:none;}
+.userchip .who .n{font-size:12.5px;font-weight:700;color:#F5EFD9;}
+.userchip .who .r{font-size:10.5px;color:#94A192;}
+.logout-btn{background:none;border:none;color:#94A192;font-size:11.5px;margin-top:8px;padding:4px 6px;text-decoration:underline;}
+
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;padding-bottom:70px;}
+.topbar{
+  position:sticky;top:0;z-index:30;background:var(--bg);
+  display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--border-soft);
+  backdrop-filter:blur(4px);
+}
+.hamburger{display:none;border:none;background:var(--surface);border:1px solid var(--border);width:38px;height:38px;border-radius:9px;font-size:16px;}
+.searchbar{
+  flex:1;max-width:400px;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;
+}
+.searchbar input{border:none;background:none;outline:none;font-size:13.5px;flex:1;color:var(--ink);}
+.searchbar .ic{color:var(--ink-faint);font-size:13px;}
+.search-results{
+  position:absolute;top:56px;left:28px;right:28px;max-width:400px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:50;
+  max-height:320px;overflow:auto;display:none;
+}
+.search-results.show{display:block;}
+.search-results .sr-item{padding:10px 14px;border-bottom:1px solid var(--border-soft);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+.search-results .sr-item:hover{background:var(--accent-bg);}
+.search-results .sr-empty{padding:14px;color:var(--ink-faint);font-size:12.5px;}
+.topbar-spacer{flex:1;}
+.bell{position:relative;background:var(--surface);border:1px solid var(--border);width:38px;height:38px;border-radius:9px;font-size:15px;}
+.bell .dot{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:1.5px solid var(--bg);}
+.role-badge{font-size:11px;font-weight:700;background:var(--accent-bg);color:var(--accent-dark);padding:5px 10px;border-radius:20px;letter-spacing:.02em;}
+
+.content{padding:22px 28px 40px;max-width:1180px;}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.page-head h1{font-size:25px;}
+.page-head .sub{color:var(--ink-soft);font-size:13.5px;margin-top:2px;}
+.breadcrumb{font-size:12px;color:var(--ink-faint);margin-bottom:6px;}
+.breadcrumb a{color:var(--ink-soft);text-decoration:none;}
+.breadcrumb a:hover{text-decoration:underline;}
+
+/* buttons */
+.btn{border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--ink);
+  padding:9px 16px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;}
+.btn:hover{background:var(--surface-alt);}
+.btn-acc{background:var(--accent);border-color:var(--accent);color:#221604;}
+.btn-acc:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff;}
+.btn-dark{background:var(--ink);border-color:var(--ink);color:#F5EFD9;}
+.btn-dark:hover{background:#12190F;}
+.btn-danger{background:var(--danger-bg);border-color:var(--danger-bg);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn-ghost{background:none;border-color:transparent;}
+.btn-ghost:hover{background:var(--surface-alt);}
+.btn-sm{padding:6px 11px;font-size:12px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+/* cards / kpis */
+.grid{display:grid;gap:14px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:1fr 1fr;}
+@media(max-width:980px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
+@media(max-width:560px){.grid-4{grid-template-columns:1fr 1fr;}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
+.kpi .lbl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:8px;}
+.kpi .val{font-family:var(--font-display);font-size:29px;font-weight:600;color:var(--ink);line-height:1.1;}
+.kpi .val small{font-family:var(--font-body);font-size:14px;font-weight:600;color:var(--ink-soft);}
+.kpi .delta{font-size:12px;margin-top:6px;font-weight:600;}
+.kpi .delta.up{color:var(--positive);}
+.kpi .delta.down{color:var(--danger);}
+.kpi .delta.flat{color:var(--ink-faint);}
+.demo-note{font-size:11px;color:var(--ink-faint);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);}
+
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 4px;}
+.flow-step{background:var(--surface-alt);border-radius:var(--radius-sm);padding:10px 16px;text-align:center;min-width:130px;}
+.flow-step .n{font-family:var(--font-mono);font-size:20px;font-weight:600;}
+.flow-step .l{font-size:11px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.flow-arrow{color:var(--ink-faint);font-size:18px;}
+.flow-step.diff{background:var(--warning-bg);}
+.flow-step.diff .n{color:var(--warning);}
+
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.01em;}
+.tag.positive{background:var(--positive-bg);color:var(--positive);}
+.tag.info{background:var(--info-bg);color:var(--info);}
+.tag.danger{background:var(--danger-bg);color:var(--danger);}
+.tag.warning{background:var(--warning-bg);color:var(--warning);}
+.tag.neutral{background:var(--surface-alt);color:var(--ink-soft);}
+
+/* section heading */
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px;}
+.sec-title h2{font-size:17px;}
+
+/* charts row */
+.charts-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;}
+@media(max-width:980px){.charts-grid{grid-template-columns:1fr;}}
+.chart-card h3{font-size:13.5px;margin-bottom:2px;}
+.chart-card .sub{font-size:11.5px;color:var(--ink-faint);margin-bottom:10px;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;}
+.legend span{display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);font-weight:600;}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+/* alerts */
+.alert-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-soft);margin-bottom:8px;background:var(--surface);}
+.alert-item:hover{border-color:var(--accent);cursor:pointer;}
+.alert-item .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+.alert-item .dot.red{background:var(--danger);}
+.alert-item .dot.orange{background:var(--accent);}
+.alert-item .dot.yellow{background:var(--warning);}
+.alert-item .txt{flex:1;font-size:13px;}
+.alert-item .txt b{font-weight:700;}
+.alert-item .cnt{font-family:var(--font-mono);font-size:12px;color:var(--ink-faint);}
+.empty-alerts{color:var(--ink-faint);font-size:13px;padding:12px 4px;}
+
+/* filters bar */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+.filters select, .filters input[type=date], .filters input[type=text]{
+  padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:12.5px;color:var(--ink);
+}
+.filters .fsearch{position:relative;flex:1;min-width:160px;}
+.filters .fsearch input{width:100%;}
+.filter-reset{font-size:12px;color:var(--ink-soft);text-decoration:underline;background:none;border:none;padding:6px;}
+
+/* table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);
+  padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface-alt);font-weight:700;white-space:nowrap;
+}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#FAF8F1;}
+.tbl-actions{display:flex;gap:6px;}
+.icbtn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--surface);font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
+.icbtn:hover{background:var(--surface-alt);}
+.icbtn.danger:hover{background:var(--danger-bg);border-color:var(--danger-bg);}
+.mono{font-family:var(--font-mono);}
+.tright{text-align:right;}
+.nowrap{white-space:nowrap;}
+.empty-row td{text-align:center;color:var(--ink-faint);padding:34px;font-size:13px;}
+
+/* mobile card-table */
+.mtable{display:none;}
+@media(max-width:760px){
+  .table-wrap table{display:none;}
+  .mtable{display:block;}
+  .mrow{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;margin-bottom:10px;}
+  .mrow-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .mrow-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:12.5px;}
+  .mrow-grid .k{color:var(--ink-faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;}
+  .mrow-actions{display:flex;gap:6px;margin-top:10px;}
+}
+
+/* forms/modals */
+.modal-bg{position:fixed;inset:0;background:rgba(20,25,18,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);max-width:560px;width:100%;max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border-soft);position:sticky;top:0;background:var(--surface);z-index:2;}
+.modal-head h3{font-size:17px;}
+.modal-close{background:none;border:none;font-size:19px;color:var(--ink-faint);width:30px;height:30px;}
+.modal-body{padding:20px 22px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--border-soft);position:sticky;bottom:0;background:var(--surface);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+.f{margin-bottom:14px;}
+.f label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+.f .req{color:var(--danger);}
+.f input, .f select, .f textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;color:var(--ink);background:var(--surface);
+}
+.f textarea{resize:vertical;min-height:60px;}
+.f .err{color:var(--danger);font-size:11.5px;margin-top:5px;display:none;font-weight:600;}
+.f.invalid input, .f.invalid select, .f.invalid textarea{border-color:var(--danger);background:var(--danger-bg);}
+.f.invalid .err{display:block;}
+.fieldset-note{font-size:12px;color:var(--ink-faint);background:var(--accent-bg);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:14px;}
+
+/* toast / confirm */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(0);z-index:200;
+  background:var(--ink);color:#F5EFD9;border-radius:var(--radius);box-shadow:var(--shadow-lg);
+  padding:16px 20px;min-width:280px;max-width:92vw;transition:.25s;
+}
+@media(min-width:761px){.toast{left:calc(50% + var(--sidebar-w)/2);}}
+.toast.hide{opacity:0;transform:translateX(-50%) translateY(12px);pointer-events:none;}
+.toast .tt{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;margin-bottom:10px;}
+.toast .ic-ok{color:#8FD9A8;}
+.toast-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.toast-actions button{background:#2E3A2C;border:none;color:#F5EFD9;font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;}
+.toast-actions button:hover{background:#3A4638;}
+
+.confirm-box{max-width:380px;}
+.confirm-box .modal-body{text-align:center;padding:26px 22px 10px;}
+.confirm-box .ic{font-size:30px;margin-bottom:10px;}
+
+/* ficha detail */
+.ficha-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+.ficha-avatar{width:58px;height:58px;border-radius:14px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:24px;color:var(--ink-soft);flex:none;}
+.ficha-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px;}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto;}
+.tab{padding:10px 15px;font-size:13px;font-weight:600;color:var(--ink-soft);border-bottom:2px solid transparent;white-space:nowrap;}
+.tab.active{color:var(--ink);border-color:var(--accent);}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:760px){.info-grid{grid-template-columns:repeat(2,1fr);}}
+.info-grid .it .k{font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);letter-spacing:.04em;margin-bottom:3px;}
+.info-grid .it .v{font-size:14px;font-weight:600;}
+
+/* bottom nav mobile */
+.bottomnav{
+  display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:1px solid var(--border);z-index:40;padding:6px 4px 8px;
+}
+.bottomnav .bn-row{display:flex;justify-content:space-around;}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink-faint);text-decoration:none;font-size:9.5px;font-weight:700;flex:1;padding:5px 2px;}
+.bn-item .ic{font-size:16px;}
+.bn-item.active{color:var(--accent-dark);}
+.drawer-bg{position:fixed;inset:0;background:rgba(20,25,18,.4);z-index:90;display:none;}
+.drawer-bg.show{display:block;}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:78%;max-width:290px;background:var(--ink);z-index:95;transform:translateX(-100%);transition:.22s;padding:20px 14px;overflow:auto;}
+.drawer.show{transform:translateX(0);}
+
+@media(max-width:980px){
+  .sidebar{display:none;}
+  .main{margin-left:0;padding-bottom:80px;}
+  .hamburger{display:inline-flex;align-items:center;justify-content:center;}
+  .bottomnav{display:block;}
+  .content{padding:16px 16px 30px;}
+  .topbar{padding:12px 16px;}
+}
+@media(min-width:981px){.drawer,.drawer-bg{display:none !important;}}
+
+.hr{height:1px;background:var(--border-soft);margin:16px 0;}
+.muted{color:var(--ink-faint);}
+.right{text-align:right;}
+.stack{display:flex;flex-direction:column;gap:10px;}
+.between{display:flex;align-items:center;justify-content:space-between;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="mark">CL</div>
+      <div class="name">Control Lechero<span>Gestión digital del hato</span></div>
+    </div>
+    <span class="demo-tag">Modo demostración</span>
+    <h1>Ingresar al sistema</h1>
+    <p class="login-sub">Elige tu perfil y usuario para probar el sistema con datos de ejemplo.</p>
+    <div class="role-picker" id="rolePicker">
+      <div class="role-opt active" data-role="propietario">
+        <span class="ic">🧑‍🌾</span><span class="lbl">Propietario</span><span class="sub">Acceso completo</span>
+      </div>
+      <div class="role-opt" data-role="encargado">
+        <span class="ic">🧤</span><span class="lbl">Encargado</span><span class="sub">Acceso operativo</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Usuario</label>
+      <select id="userSelect"></select>
+    </div>
+    <button class="btn-primary" id="loginBtn">Entrar al sistema</button>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <div class="topbar">
+        <button class="hamburger" id="hamburgerBtn">☰</button>
+        <div class="searchbar">
+          <span class="ic">🔍</span>
+          <input id="globalSearch" type="text" placeholder="Buscar vaca o ternero por arete o nombre...">
+        </div>
+        <div class="search-results" id="searchResults"></div>
+        <div class="topbar-spacer"></div>
+        <button class="bell" id="bellBtn" title="Alertas">🔔<span class="dot" id="bellDot" style="display:none"></span></button>
+        <span class="role-badge" id="roleBadge"></span>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+  <nav class="bottomnav">
+    <div class="bn-row" id="bottomNavRow"></div>
+  </nav>
+  <div class="drawer-bg" id="drawerBg"></div>
+  <div class="drawer" id="drawer"></div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =====================================================================
+   DATA LAYER — datos de demostración
+   Estas funciones simulan la futura fuente en Google Sheets.
+   Cada función get / guardar / actualizar / eliminar está preparada para
+   ser reemplazada por fetch() a Google Apps Script sin tocar la UI.
+===================================================================== */
+let _id = 1000;
+function nextId(prefix){ _id++; return prefix + _id; }
+
+const RAZAS = ["Holstein","Jersey","Pardo Suizo","Gyr Lechero","Criolla"];
+const NOMBRES_VACA = ["Lola","Estrella","Canela","Perla","Rosita","Manchas","Luna","Bonita","Flor","Paloma","Chispa","Reina","Dulce","Blanca","Marrón","Coqueta","Pinta","Trébol","Amapola","Diamante","Girasol","Violeta","Campanita","Sultana","Jazmín","Corazón","Princesa","Alegría","Aurora","Nube"];
+const USUARIOS = [
+  {id:"u1", nombre:"Don Ramiro Pérez", rol:"propietario"},
+  {id:"u2", nombre:"Juan Mamani", rol:"encargado"},
+  {id:"u3", nombre:"Rosa Quispe", rol:"encargado"},
+];
+const VETERINARIOS = ["Dr. Álvaro Suárez","Dra. Lucía Rojas","Ing. Marcelo Zambrana"];
+
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(arr){ return arr[rnd(0,arr.length-1)]; }
+function fmtDate(d){
+  if(typeof d === "string") return d;
+  return d.toISOString().slice(0,10);
+}
+function daysAgo(n){ const d = new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
+function todayStr(){ return fmtDate(new Date()); }
+
+// ---- VACAS ----
+let VACAS = [];
+(function seedVacas(){
+  for(let i=0;i<26;i++){
+    const arete = "BO-" + (1000+i);
+    const nombre = NOMBRES_VACA[i % NOMBRES_VACA.length];
+    let estadoProductivo, estadoReproductivo, estadoSanitario;
+    const r = Math.random();
+    if(i < 17) estadoProductivo = "produccion";
+    else if(i < 21) estadoProductivo = "secado";
+    else if(i < 24) estadoProductivo = "no_productiva";
+    else estadoProductivo = "descarte";
+    estadoReproductivo = Math.random() < 0.55 ? "preñada" : "no_preñada";
+    if(i===2 || i===9 || i===14) estadoSanitario = "mastitis";
+    else if(i===6) estadoSanitario = "lesion";
+    else if(i===11) estadoSanitario = "tratamiento";
+    else estadoSanitario = "sana";
+    const nacYear = 2018 + rnd(0,6);
+    VACAS.push({
+      id: nextId("V"), arete, nombre, raza: pick(RAZAS),
+      fechaNacimiento: `${nacYear}-${String(rnd(1,12)).padStart(2,"0")}-${String(rnd(1,28)).padStart(2,"0")}`,
+      fechaIngreso: daysAgo(rnd(60,1800)),
+      estadoProductivo, estadoReproductivo, estadoSanitario,
+      observaciones: ""
+    });
+  }
+})();
+
+// ---- PRODUCCION (últimos 7 días, 3 turnos, solo vacas en producción) ----
+let PRODUCCION = [];
+(function seedProduccion(){
+  const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion");
+  for(let d=6; d>=0; d--){
+    const fecha = daysAgo(d);
+    enProd.forEach(v=>{
+      ["mañana","tarde","noche"].forEach(turno=>{
+        if(Math.random() < 0.94){
+          const base = v.estadoSanitario==="mastitis" ? rnd(3,7) : rnd(5,11);
+          PRODUCCION.push({
+            id: nextId("P"), fecha, vacaId: v.id, turno, litros: base,
+            registradoPor: pick(USUARIOS.filter(u=>u.rol==="encargado")).nombre,
+            observaciones: ""
+          });
+        }
+      });
+    });
+  }
+})();
+
+// ---- ENTREGAS PIL (últimos 7 días) ----
+let ENTREGAS_PIL = [];
+(function seedEntregas(){
+  for(let d=6; d>=0; d--){
+    const fecha = daysAgo(d);
+    const totalDia = PRODUCCION.filter(p=>p.fecha===fecha).reduce((s,p)=>s+p.litros,0);
+    const litros = Math.max(0, Math.round(totalDia * (0.86 + Math.random()*0.09)));
+    const precio = 3.9;
+    ENTREGAS_PIL.push({
+      id: nextId("E"), fecha, hora: "07:3" + rnd(0,9),
+      litros, precioLitro: precio, monto: +(litros*precio).toFixed(2),
+      comprobante: "PIL-" + (58000+d), registradoPor: "Juan Mamani",
+      observaciones: ""
+    });
+  }
+})();
+
+// ---- EVENTOS SANITARIOS (vacas y terneros) ----
+const TIPOS_EVENTO = ["Vacuna contra garrapata","Vitaminización","Tratamiento de mastitis","Lesión física","Otro evento sanitario"];
+let EVENTOS_SANITARIOS = [];
+(function seedEventos(){
+  VACAS.forEach(v=>{
+    if(v.estadoSanitario==="mastitis"){
+      EVENTOS_SANITARIOS.push({
+        id: nextId("S"), animalTipo:"vaca", animalId:v.id, tipo:"Tratamiento de mastitis",
+        fechaDiagnostico: daysAgo(rnd(1,6)), descripcion:"Inflamación detectada en cuarto posterior derecho.",
+        producto:"Cefalosporina intramamaria", tratamiento:"Aplicación cada 12h por 5 días",
+        fechaInicio: daysAgo(rnd(1,6)), fechaFin:"", responsable: pick(VETERINARIOS),
+        costo: rnd(80,220), estado:"activo", observaciones:""
+      });
+    }
+    if(v.estadoSanitario==="lesion"){
+      EVENTOS_SANITARIOS.push({
+        id: nextId("S"), animalTipo:"vaca", animalId:v.id, tipo:"Lesión física",
+        tipoLesion:"Corte superficial", ubicacion:"Pata trasera izquierda",
+        descripcion:"Lesión leve por alambre de cerco.", tratamiento:"Limpieza y antiséptico diario",
+        fecha: daysAgo(rnd(1,5)), responsable: pick(VETERINARIOS), costo: rnd(20,60),
+        estado:"activo", observaciones:""
+      });
+    }
+    if(v.estadoSanitario==="tratamiento"){
+      EVENTOS_SANITARIOS.push({
+        id: nextId("S"), animalTipo:"vaca", animalId:v.id, tipo:"Otro evento sanitario",
+        descripcion:"Control de parásitos internos.", producto:"Antiparasitario oral",
+        tratamiento:"Dosis única", fechaInicio: daysAgo(3), fechaFin: daysAgo(1),
+        responsable: pick(VETERINARIOS), costo: rnd(30,50), estado:"activo", observaciones:""
+      });
+    }
+  });
+  // historial finalizado adicional
+  for(let i=0;i<9;i++){
+    const v = pick(VACAS);
+    EVENTOS_SANITARIOS.push({
+      id: nextId("S"), animalTipo:"vaca", animalId:v.id, tipo: pick(["Vacuna contra garrapata","Vitaminización"]),
+      descripcion:"Aplicación de rutina programada.", producto: pick(["Ivermectina","Complejo B12"]),
+      tratamiento:"Dosis única", fechaInicio: daysAgo(rnd(10,40)), fechaFin: daysAgo(rnd(1,9)),
+      responsable: pick(VETERINARIOS), costo: rnd(15,45), estado:"finalizado", observaciones:""
+    });
+  }
+})();
+
+// ---- TERNEROS ----
+let TERNEROS = [];
+let PESAJES_TERNEROS = [];
+(function seedTerneros(){
+  const madres = VACAS.slice(0,12);
+  for(let i=0;i<11;i++){
+    const madre = madres[i % madres.length];
+    const sexo = Math.random()<0.5 ? "Hembra" : "Macho";
+    const edadDias = rnd(15,240);
+    const pesoNac = +(rnd(28,38)+Math.random()).toFixed(1);
+    const pesoAct = +(pesoNac + edadDias*0.55 + rnd(-3,3)).toFixed(1);
+    let estado = "activo";
+    if(i===9) estado = "vendido";
+    if(i===10) estado = "fallecido";
+    const t = {
+      id: nextId("T"), arete: "TR-" + (2000+i), nombre: pick(["Copito","Estrellita","Manchitas","Pipo","Lucero","Canelo","Nube","Tesoro","Rocío","Bambi","Coco"]),
+      sexo, fechaNacimiento: daysAgo(edadDias), madreId: madre.id, padre: Math.random()<0.4 ? "Toro Holstein (IA)" : "",
+      pesoNacimiento: pesoNac, pesoActual: pesoAct, fechaUltimoPesaje: daysAgo(rnd(1,10)),
+      estadoSalud: i===3 ? "En tratamiento" : "Sano", estado, observaciones:""
+    };
+    TERNEROS.push(t);
+    const pesajes = rnd(2,4);
+    for(let p=pesajes;p>=1;p--){
+      PESAJES_TERNEROS.push({
+        id: nextId("W"), terneroId: t.id, fecha: daysAgo(p*Math.round(edadDias/(pesajes+1))),
+        peso: +(pesoNac + (pesoAct-pesoNac)*((pesajes-p+1)/pesajes)).toFixed(1), observaciones:""
+      });
+    }
+    if(i===3){
+      EVENTOS_SANITARIOS.push({
+        id: nextId("S"), animalTipo:"ternero", animalId:t.id, tipo:"Otro evento sanitario",
+        descripcion:"Diarrea leve, en observación.", producto:"Suero oral rehidratante",
+        tratamiento:"Cada 8 horas", fechaInicio: daysAgo(2), fechaFin:"",
+        responsable: pick(VETERINARIOS), costo: rnd(10,30), estado:"activo", observaciones:""
+      });
+    }
+  }
+})();
+
+// ---- Funciones "API" reemplazables por fetch() a Google Apps Script ----
+function getVacas(){ return VACAS; }
+function guardarVaca(v){ v.id = nextId("V"); VACAS.push(v); return v; }
+function actualizarVaca(id, patch){ const v = VACAS.find(x=>x.id===id); Object.assign(v, patch); return v; }
+function eliminarVaca(id){ VACAS = VACAS.filter(v=>v.id!==id); }
+
+function getProduccion(){ return PRODUCCION; }
+function guardarProduccion(p){ p.id = nextId("P"); PRODUCCION.push(p); return p; }
+function eliminarProduccion(id){ PRODUCCION = PRODUCCION.filter(p=>p.id!==id); }
+
+function getEntregasPIL(){ return ENTREGAS_PIL; }
+function guardarEntregaPIL(e){ e.id = nextId("E"); ENTREGAS_PIL.push(e); return e; }
+function eliminarEntregaPIL(id){ ENTREGAS_PIL = ENTREGAS_PIL.filter(e=>e.id!==id); }
+
+function getEventosSanitarios(){ return EVENTOS_SANITARIOS; }
+function guardarEventoSanitario(ev){ ev.id = nextId("S"); EVENTOS_SANITARIOS.push(ev); return ev; }
+function eliminarEventoSanitario(id){ EVENTOS_SANITARIOS = EVENTOS_SANITARIOS.filter(e=>e.id!==id); }
+
+function getTerneros(){ return TERNEROS; }
+function guardarTernero(t){ t.id = nextId("T"); TERNEROS.push(t); return t; }
+function actualizarTernero(id, patch){ const t = TERNEROS.find(x=>x.id===id); Object.assign(t, patch); return t; }
+function eliminarTernero(id){ TERNEROS = TERNEROS.filter(t=>t.id!==id); }
+
+function getPesajes(terneroId){ return PESAJES_TERNEROS.filter(p=>p.terneroId===terneroId); }
+function guardarPesaje(p){ p.id = nextId("W"); PESAJES_TERNEROS.push(p);
+  const t = TERNEROS.find(x=>x.id===p.terneroId);
+  if(t){ t.pesoActual = p.peso; t.fechaUltimoPesaje = p.fecha; }
+  return p; }
+
+/* =====================================================================
+   STATE
+===================================================================== */
+const STATE = {
+  user: null, role: "propietario",
+  route: "#/dashboard",
+  umbralDiferencia: 30, // litros, configurable
+};
+
+/* =====================================================================
+   UTILIDADES
+===================================================================== */
+function q(sel, root){ return (root||document).querySelector(sel); }
+function qa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function numLitros(n){ return n.toLocaleString("es-BO",{maximumFractionDigits:1}) + " L"; }
+function numBs(n){ return "Bs " + n.toLocaleString("es-BO",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtFecha(iso){
+  if(!iso) return "—";
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+function edadDesde(iso){
+  const dias = Math.floor((new Date() - new Date(iso))/86400000);
+  if(dias < 30) return dias + " días";
+  if(dias < 365) return Math.floor(dias/30) + " meses";
+  const anios = Math.floor(dias/365); const meses = Math.floor((dias%365)/30);
+  return anios + " a" + (meses? " "+meses+" m" : "");
+}
+function vacaById(id){ return VACAS.find(v=>v.id===id); }
+function terneroById(id){ return TERNEROS.find(t=>t.id===id); }
+
+const ESTADO_PROD_LABEL = {produccion:"En producción", secado:"En secado", descarte:"Para descarte", no_productiva:"No productiva"};
+const ESTADO_PROD_TAG = {produccion:"positive", secado:"info", descarte:"danger", no_productiva:"neutral"};
+const ESTADO_SAN_LABEL = {sana:"Sana", mastitis:"Mastitis", lesion:"Lesión física", tratamiento:"En tratamiento", otro:"Otro"};
+const ESTADO_SAN_TAG = {sana:"positive", mastitis:"danger", lesion:"warning", tratamiento:"info", otro:"neutral"};
+
+function tag(label, kind){ return `<span class="tag ${kind}">${esc(label)}</span>`; }
+function tagProd(v){ return tag(ESTADO_PROD_LABEL[v], ESTADO_PROD_TAG[v]); }
+function tagSan(v){ return tag(ESTADO_SAN_LABEL[v], ESTADO_SAN_TAG[v]); }
+function tagRepro(v){ return v==="preñada" ? tag("Preñada","positive") : tag("No preñada","neutral"); }
+function eartag(txt){ return `<span class="eartag">${esc(txt)}</span>`; }
+
+function toast(title, opts){
+  opts = opts || {};
+  const root = q("#toastRoot");
+  root.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "toast";
+  div.innerHTML = `
+    <div class="tt"><span class="ic-ok">✓</span> ${esc(title)}</div>
+    <div class="toast-actions">
+      ${opts.again ? `<button data-t-again>Registrar otro</button>` : ""}
+      ${opts.view ? `<button data-t-view>Ver registro</button>` : ""}
+      <button data-t-dash>Ir al Dashboard</button>
+    </div>`;
+  root.appendChild(div);
+  if(opts.again) q("[data-t-again]", div).onclick = ()=>{ hideToast(); opts.again(); };
+  if(opts.view) q("[data-t-view]", div).onclick = ()=>{ hideToast(); opts.view(); };
+  q("[data-t-dash]", div).onclick = ()=>{ hideToast(); navigate("#/dashboard"); };
+  setTimeout(()=>hideToast(), 7000);
+}
+function hideToast(){ const t = q(".toast"); if(t){ t.classList.add("hide"); setTimeout(()=>{ q("#toastRoot").innerHTML=""; }, 250); } }
+
+function confirmDialog(msg, onYes){
+  const root = q("#modalRoot");
+  root.innerHTML = `
+    <div class="modal-bg" data-close-confirm>
+      <div class="modal confirm-box" onclick="event.stopPropagation()">
+        <div class="modal-body">
+          <div class="ic">⚠️</div>
+          <h3>¿Está seguro?</h3>
+          <p class="muted" style="margin-top:6px;font-size:13px;">${esc(msg)}</p>
+        </div>
+        <div class="modal-foot" style="justify-content:center;">
+          <button class="btn btn-ghost" data-cancel>Cancelar</button>
+          <button class="btn btn-danger" data-yes>Sí, eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  q("[data-close-confirm]", root).onclick = closeModal;
+  q("[data-cancel]", root).onclick = closeModal;
+  q("[data-yes]", root).onclick = ()=>{ closeModal(); onYes(); };
+}
+function openModal(html){
+  const root = q("#modalRoot");
+  root.innerHTML = `<div class="modal-bg" data-close-m><div class="modal" onclick="event.stopPropagation()">${html}</div></div>`;
+  q("[data-close-m]", root).onclick = closeModal;
+}
+function closeModal(){ q("#modalRoot").innerHTML = ""; }
+
+function validateField(fEl, condition, msg){
+  if(!condition){ fEl.classList.add("invalid"); q(".err", fEl).textContent = msg; return false; }
+  fEl.classList.remove("invalid"); return true;
+}
+
+/* =====================================================================
+   NAVEGACIÓN / MENÚ
+===================================================================== */
+const NAV = [
+  {group:"", items:[{r:"#/dashboard", ic:"🏠", lbl:"Dashboard", roles:["propietario","encargado"]}]},
+  {group:"Hato", items:[
+    {r:"#/hato", ic:"🐄", lbl:"Registro de vacas", roles:["propietario","encargado"]},
+  ]},
+  {group:"Producción", items:[
+    {r:"#/produccion", ic:"🥛", lbl:"Registro de producción", roles:["propietario","encargado"]},
+    {r:"#/produccion/historial", ic:"📋", lbl:"Historial de producción", roles:["propietario","encargado"]},
+    {r:"#/pil", ic:"🚚", lbl:"Entrega a PIL", roles:["propietario","encargado"]},
+  ]},
+  {group:"Sanidad", items:[
+    {r:"#/sanidad", ic:"🩺", lbl:"Registro sanitario", roles:["propietario","encargado"]},
+    {r:"#/sanidad/historial", ic:"📖", lbl:"Historial sanitario", roles:["propietario","encargado"]},
+  ]},
+  {group:"Terneraje", items:[
+    {r:"#/terneraje", ic:"🐮", lbl:"Terneros", roles:["propietario","encargado"]},
+  ]},
+  {group:"", items:[
+    {r:"#/reportes", ic:"📊", lbl:"Reportes", roles:["propietario"]},
+    {r:"#/configuracion", ic:"⚙️", lbl:"Configuración", roles:["propietario"]},
+  ]},
+];
+const BOTTOM_NAV = [
+  {r:"#/dashboard", ic:"🏠", lbl:"Inicio"},
+  {r:"#/hato", ic:"🐄", lbl:"Hato"},
+  {r:"#/produccion", ic:"🥛", lbl:"Leche"},
+  {r:"#/sanidad", ic:"🩺", lbl:"Sanidad"},
+  {r:"#/terneraje", ic:"🐮", lbl:"Terneros"},
+];
+
+function renderSidebar(){
+  const items = NAV.map(g=>{
+    const visible = g.items.filter(i=>i.roles.includes(STATE.role));
+    if(!visible.length) return "";
+    return `${g.group ? `<div class="grouplbl">${esc(g.group)}</div>` : ""}` +
+      visible.map(i=>`<a href="${i.r}" class="navlink ${STATE.route===i.r?'active':''}"><span class="ic">${i.ic}</span>${esc(i.lbl)}</a>`).join("");
+  }).join("");
+  q("#sidebar").innerHTML = `
+    <div class="brand"><div class="mark">CL</div><div class="name">Control Lechero<span>${esc(STATE.role==='propietario'?'Panel del propietario':'Panel del encargado')}</span></div></div>
+    <nav>${items}</nav>
+    <div class="sidebar-foot">
+      <div class="userchip"><div class="av">${esc(STATE.user.nombre.split(" ").map(w=>w[0]).slice(0,2).join(""))}</div>
+        <div class="who"><div class="n">${esc(STATE.user.nombre)}</div><div class="r">${esc(STATE.role==='propietario'?'Propietario':'Encargado')}</div></div></div>
+      <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
+    </div>`;
+  q("#logoutBtn").onclick = logout;
+  const drawer = q("#drawer");
+  drawer.innerHTML = q("#sidebar").innerHTML;
+  qa("a.navlink", drawer).forEach(a=> a.onclick = closeDrawer );
+  q("#logoutBtn", drawer).onclick = logout;
+
+  const bnRow = q("#bottomNavRow");
+  bnRow.innerHTML = BOTTOM_NAV.map(i=>`<a href="${i.r}" class="bn-item ${STATE.route.startsWith(i.r)?'active':''}"><span class="ic">${i.ic}</span>${esc(i.lbl)}</a>`).join("");
+  q("#roleBadge").textContent = STATE.role==="propietario" ? "Propietario" : "Encargado";
+}
+function openDrawer(){ q("#drawer").classList.add("show"); q("#drawerBg").classList.add("show"); }
+function closeDrawer(){ q("#drawer").classList.remove("show"); q("#drawerBg").classList.remove("show"); }
+
+function logout(){
+  STATE.user = null;
+  q("#app").classList.remove("on");
+  q("#screen-login").style.display = "flex";
+  location.hash = "";
+}
+
+/* =====================================================================
+   ALERTAS
+===================================================================== */
+function computeAlerts(){
+  const alerts = [];
+  const mastitisVacas = VACAS.filter(v=>v.estadoSanitario==="mastitis");
+  if(mastitisVacas.length) alerts.push({level:"red", text:`${mastitisVacas.length} vaca(s) con mastitis activa`, count:mastitisVacas.length, go:"#/sanidad/historial?estado=activo"});
+  const hoy = todayStr();
+  const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion");
+  const sinRegistroHoy = enProd.filter(v=> !PRODUCCION.some(p=>p.vacaId===v.id && p.fecha===hoy));
+  if(sinRegistroHoy.length) alerts.push({level:"orange", text:`${sinRegistroHoy.length} vaca(s) sin producción registrada hoy`, count:sinRegistroHoy.length, go:"#/produccion/historial"});
+  const secado = VACAS.filter(v=>v.estadoProductivo==="secado");
+  if(secado.length) alerts.push({level:"yellow", text:`${secado.length} vaca(s) en periodo de secado`, count:secado.length, go:"#/hato?estado=secado"});
+  const descarte = VACAS.filter(v=>v.estadoProductivo==="descarte");
+  if(descarte.length) alerts.push({level:"red", text:`${descarte.length} vaca(s) marcada(s) para descarte`, count:descarte.length, go:"#/hato?estado=descarte"});
+  const eventosActivos = EVENTOS_SANITARIOS.filter(e=>e.estado==="activo");
+  if(eventosActivos.length) alerts.push({level:"yellow", text:`${eventosActivos.length} evento(s) sanitario(s) activo(s)`, count:eventosActivos.length, go:"#/sanidad/historial?estado=activo"});
+  return alerts;
+}
+
+/* =====================================================================
+   GRÁFICOS SVG (sin librerías)
+===================================================================== */
+function svgLineChart(labels, values, opts){
+  opts = opts || {};
+  const w=520,h=180,padL=34,padR=14,padT=14,padB=26;
+  const max = Math.max(...values, 1)*1.15;
+  const stepX = (w-padL-padR)/(Math.max(values.length-1,1));
+  const pts = values.map((v,i)=>{
+    const x = padL + i*stepX;
+    const y = padT + (1-(v/max))*(h-padT-padB);
+    return [x,y];
+  });
+  const path = pts.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  const area = path + ` L${pts[pts.length-1][0].toFixed(1)},${h-padB} L${pts[0][0].toFixed(1)},${h-padB} Z`;
+  const gridY = [0,0.5,1].map(f=>{
+    const y = padT + f*(h-padT-padB);
+    return `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
+  }).join("");
+  const dots = pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.4" fill="var(--accent)"><title>${labels[i]}: ${values[i]} L</title></circle>`).join("");
+  const labelsSvg = labels.map((l,i)=>`<text x="${pts[i][0]}" y="${h-8}" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle" font-family="Inter">${l}</text>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;">
+    ${gridY}
+    <path d="${area}" fill="var(--accent-bg)" stroke="none"/>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${labelsSvg}
+  </svg>`;
+}
+function svgBarCompare(labels, a, b, colA, colB){
+  const w=520,h=190,padL=34,padR=10,padT=14,padB=26;
+  const max = Math.max(...a, ...b, 1)*1.15;
+  const groupW = (w-padL-padR)/labels.length;
+  const barW = groupW*0.32;
+  let bars = "";
+  labels.forEach((l,i)=>{
+    const gx = padL + i*groupW + groupW*0.14;
+    const hA = (a[i]/max)*(h-padT-padB), hB = (b[i]/max)*(h-padT-padB);
+    bars += `<rect x="${gx}" y="${h-padB-hA}" width="${barW}" height="${hA}" rx="2.5" fill="${colA}"><title>${l} producción: ${a[i]} L</title></rect>`;
+    bars += `<rect x="${gx+barW+3}" y="${h-padB-hB}" width="${barW}" height="${hB}" rx="2.5" fill="${colB}"><title>${l} entrega: ${b[i]} L</title></rect>`;
+    bars += `<text x="${gx+barW+1.5}" y="${h-8}" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle" font-family="Inter">${l}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;">${bars}</svg>`;
+}
+function svgDonut(segments){
+  // segments: [{label,value,color}]
+  const total = segments.reduce((s,x)=>s+x.value,0) || 1;
+  const r=58, cx=72, cy=72, sw=20;
+  let angle = -90, paths = "";
+  segments.forEach(seg=>{
+    const frac = seg.value/total;
+    const a0 = angle, a1 = angle + frac*360;
+    angle = a1;
+    if(seg.value<=0) return;
+    const large = (a1-a0) > 180 ? 1 : 0;
+    const p0 = polar(cx,cy,r,a0), p1 = polar(cx,cy,r,a1);
+    paths += `<path d="M ${p0.x} ${p0.y} A ${r} ${r} 0 ${large} 1 ${p1.x} ${p1.y}" fill="none" stroke="${seg.color}" stroke-width="${sw}"><title>${seg.label}: ${seg.value}</title></path>`;
+  });
+  return `<svg viewBox="0 0 144 144" style="width:150px;height:150px;">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border-soft)" stroke-width="${sw}"/>
+    ${paths}
+    <text x="${cx}" y="${cy-3}" text-anchor="middle" font-family="Fraunces" font-size="22" font-weight="600" fill="var(--ink)">${total}</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" font-family="Inter" font-size="9" fill="var(--ink-faint)">animales</text>
+  </svg>`;
+}
+function polar(cx,cy,r,angleDeg){ const a = angleDeg*Math.PI/180; return {x:(cx+r*Math.cos(a)).toFixed(2), y:(cy+r*Math.sin(a)).toFixed(2)}; }
+
+function svgHBarRepro(prenadas, noPrenadas){
+  const w=520,h=90,padL=90,padR=50,padT=10;
+  const max = Math.max(prenadas,noPrenadas,1);
+  const rowH = 30;
+  function row(y,label,val,color){
+    const bw = (val/max)*(w-padL-padR);
+    return `<text x="${padL-10}" y="${y+15}" text-anchor="end" font-size="11.5" font-family="Inter" font-weight="600" fill="var(--ink-soft)">${label}</text>
+      <rect x="${padL}" y="${y}" width="${bw}" height="20" rx="4" fill="${color}"/>
+      <text x="${padL+bw+8}" y="${y+15}" font-size="12" font-family="JetBrains Mono" font-weight="600" fill="var(--ink)">${val}</text>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;">
+    ${row(padT,"Preñadas",prenadas,"var(--positive)")}
+    ${row(padT+rowH+10,"No preñadas",noPrenadas,"var(--info)")}
+  </svg>`;
+}
+
+/* =====================================================================
+   ROUTER
+===================================================================== */
+function navigate(hash){ location.hash = hash; }
+window.addEventListener("hashchange", render);
+
+function currentRoute(){
+  let h = location.hash || "#/dashboard";
+  const [path, qs] = h.split("?");
+  const params = {};
+  if(qs) qs.split("&").forEach(kv=>{ const [k,v]=kv.split("="); params[decodeURIComponent(k)] = decodeURIComponent(v||""); });
+  return {path, params};
+}
+
+function render(){
+  if(!STATE.user) return;
+  const {path, params} = currentRoute();
+  STATE.route = path;
+  renderSidebar();
+  const c = q("#content");
+  try{
+    if(path==="#/dashboard") c.innerHTML = viewDashboard();
+    else if(path==="#/hato") c.innerHTML = viewHatoLista(params);
+    else if(path.startsWith("#/hato/")) c.innerHTML = viewFichaVaca(path.split("/")[2]);
+    else if(path==="#/produccion") c.innerHTML = viewProduccionForm();
+    else if(path==="#/produccion/historial") c.innerHTML = viewProduccionHistorial(params);
+    else if(path==="#/pil") c.innerHTML = viewPIL(params);
+    else if(path==="#/sanidad") c.innerHTML = viewSanidadForm();
+    else if(path==="#/sanidad/historial") c.innerHTML = viewSanidadHistorial(params);
+    else if(path==="#/terneraje") c.innerHTML = viewTerneraje(params);
+    else if(path.startsWith("#/ternero/")) c.innerHTML = viewFichaTernero(path.split("/")[2]);
+    else if(path==="#/reportes") c.innerHTML = viewReportes(params);
+    else if(path==="#/configuracion") c.innerHTML = viewConfiguracion();
+    else c.innerHTML = viewDashboard();
+  }catch(e){
+    console.error(e);
+    c.innerHTML = `<div class="card"><h3>Ocurrió un error al mostrar esta pantalla</h3><p class="muted" style="margin-top:6px">${esc(e.message)}</p></div>`;
+  }
+  bindPageEvents(path, params);
+  window.scrollTo(0,0);
+  closeDrawer();
+  updateBell();
+}
+
+function updateBell(){
+  const has = computeAlerts().length>0;
+  q("#bellDot").style.display = has ? "block" : "none";
+}
+
+/* =====================================================================
+   VISTA: DASHBOARD
+===================================================================== */
+function viewDashboard(){
+  const hoy = todayStr();
+  const prodHoy = PRODUCCION.filter(p=>p.fecha===hoy).reduce((s,p)=>s+p.litros,0);
+  const entregaHoy = ENTREGAS_PIL.find(e=>e.fecha===hoy);
+  const litrosPIL = entregaHoy ? entregaHoy.litros : 0;
+  const diferencia = prodHoy - litrosPIL;
+  const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion");
+  const promedio = enProd.length ? prodHoy/enProd.length : 0;
+
+  const last7 = [...Array(7)].map((_,i)=>daysAgo(6-i));
+  const labels7 = last7.map(d=>fmtFecha(d).slice(0,5));
+  const prodSerie = last7.map(d=> PRODUCCION.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0));
+  const pilSerie = last7.map(d=>{ const e = ENTREGAS_PIL.find(x=>x.fecha===d); return e? e.litros : 0; });
+
+  const totalVacas = VACAS.length;
+  const secado = VACAS.filter(v=>v.estadoProductivo==="secado").length;
+  const mastitis = VACAS.filter(v=>v.estadoSanitario==="mastitis").length;
+  const descarte = VACAS.filter(v=>v.estadoProductivo==="descarte").length;
+  const prenadas = VACAS.filter(v=>v.estadoReproductivo==="preñada").length;
+  const noPrenadas = totalVacas - prenadas;
+  const totalTerneros = TERNEROS.length;
+  const terActivos = TERNEROS.filter(t=>t.estado==="activo").length;
+
+  const alerts = computeAlerts();
+  const noDataToday = PRODUCCION.filter(p=>p.fecha===hoy).length === 0;
+
+  return `
+  <div class="page-head">
+    <div><h1>Dashboard</h1><p class="sub">Resumen del día — ${fmtFecha(hoy)}</p></div>
+    <span class="tag warning">📌 Datos de demostración</span>
+  </div>
+
+  <div class="grid grid-4">
+    <div class="card kpi">
+      <div class="lbl">Producción de hoy</div>
+      <div class="val">${noDataToday ? '<small>Sin datos registrados</small>' : numLitros(prodHoy)}</div>
+      <div class="delta flat">${enProd.length} vacas en producción</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Promedio por vaca</div>
+      <div class="val">${promedio ? numLitros(+promedio.toFixed(1)) : '<small>Sin datos</small>'}</div>
+      <div class="delta flat">Litros / vaca en producción</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Entregado a PIL</div>
+      <div class="val">${entregaHoy ? numLitros(litrosPIL) : '<small>Sin registro hoy</small>'}</div>
+      <div class="delta flat">${entregaHoy ? numBs(entregaHoy.monto) : '—'}</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Diferencia</div>
+      <div class="val" style="color:${Math.abs(diferencia)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(diferencia)}</div>
+      <div class="delta ${diferencia>STATE.umbralDiferencia?'down':'flat'}">${Math.abs(diferencia)>STATE.umbralDiferencia? 'Supera el umbral configurado' : 'Dentro de lo esperado'}</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Producción → Entrega PIL → Diferencia</div>
+    <div class="flow">
+      <div class="flow-step"><div class="n">${numLitros(prodHoy)}</div><div class="l">Producción</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="n">${numLitros(litrosPIL)}</div><div class="l">Entrega PIL</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step diff"><div class="n">${numLitros(diferencia)}</div><div class="l">Diferencia</div></div>
+    </div>
+    <div class="demo-note">Datos de demostración — se actualizarán automáticamente al conectar con Google Sheets.</div>
+  </div>
+
+  <div class="sec-title"><h2>Indicadores del hato</h2></div>
+  <div class="grid grid-4">
+    <div class="card kpi"><div class="lbl">Total de vacas</div><div class="val">${totalVacas}</div></div>
+    <div class="card kpi"><div class="lbl">En secado</div><div class="val">${secado}</div></div>
+    <div class="card kpi"><div class="lbl">Con mastitis</div><div class="val" style="color:${mastitis?'var(--danger)':'var(--ink)'}">${mastitis}</div></div>
+    <div class="card kpi"><div class="lbl">Para descarte</div><div class="val">${descarte}</div></div>
+    <div class="card kpi"><div class="lbl">Preñadas</div><div class="val">${prenadas}</div></div>
+    <div class="card kpi"><div class="lbl">No preñadas</div><div class="val">${noPrenadas}</div></div>
+    <div class="card kpi"><div class="lbl">Total terneros</div><div class="val">${totalTerneros}</div></div>
+    <div class="card kpi"><div class="lbl">Terneros activos</div><div class="val">${terActivos}</div></div>
+  </div>
+
+  <div class="sec-title"><h2>Evolución (últimos 7 días)</h2></div>
+  <div class="charts-grid">
+    <div class="card chart-card">
+      <h3>Producción diaria del hato</h3><div class="sub">Total de litros registrados por día</div>
+      ${svgLineChart(labels7, prodSerie)}
+    </div>
+    <div class="card chart-card">
+      <h3>Distribución del hato</h3><div class="sub">Por estado productivo</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        ${svgDonut([
+          {label:"En producción", value:enProd.length, color:"var(--positive)"},
+          {label:"Secado", value:secado, color:"var(--info)"},
+          {label:"Mastitis", value:mastitis, color:"var(--danger)"},
+          {label:"Descarte", value:descarte, color:"var(--warning)"},
+        ])}
+        <div class="legend" style="flex-direction:column;gap:7px;">
+          <span><i style="background:var(--positive)"></i>En producción (${enProd.length})</span>
+          <span><i style="background:var(--info)"></i>Secado (${secado})</span>
+          <span><i style="background:var(--danger)"></i>Mastitis (${mastitis})</span>
+          <span><i style="background:var(--warning)"></i>Descarte (${descarte})</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-grid" style="margin-top:14px;">
+    <div class="card chart-card">
+      <h3>Producción vs. entrega a PIL</h3><div class="sub">Comparativo diario, en litros</div>
+      ${svgBarCompare(labels7, prodSerie, pilSerie, "var(--accent)", "var(--info)")}
+      <div class="legend"><span><i style="background:var(--accent)"></i>Producción</span><span><i style="background:var(--info)"></i>Entrega PIL</span></div>
+    </div>
+    <div class="card chart-card">
+      <h3>Estado reproductivo</h3><div class="sub">Preñadas vs. no preñadas</div>
+      ${svgHBarRepro(prenadas, noPrenadas)}
+    </div>
+  </div>
+
+  <div class="sec-title"><h2>Alertas</h2><a href="#/hato" class="btn btn-ghost btn-sm">Ver hato →</a></div>
+  <div class="card">
+    ${alerts.length ? alerts.map(a=>`
+      <div class="alert-item" data-goto="${a.go}">
+        <span class="dot ${a.level}"></span>
+        <span class="txt">${a.text}</span>
+        <span class="cnt">${a.count}</span>
+      </div>`).join("") : `<div class="empty-alerts">Sin alertas activas por el momento.</div>`}
+  </div>
+  `;
+}
+
+/* =====================================================================
+   VISTA: HATO — LISTA
+===================================================================== */
+function viewHatoLista(params){
+  const search = (params.q||"").toLowerCase();
+  const fp = params.estado || "";
+  const fr = params.repro || "";
+  const fs = params.sanitario || "";
+  let list = VACAS.filter(v=>{
+    if(fp && v.estadoProductivo!==fp) return false;
+    if(fr && v.estadoReproductivo!==fr) return false;
+    if(fs && v.estadoSanitario!==fs) return false;
+    if(search && !(v.arete.toLowerCase().includes(search) || v.nombre.toLowerCase().includes(search))) return false;
+    return true;
+  });
+  return `
+  <div class="page-head">
+    <div><h1>Registro de vacas</h1><p class="sub">${VACAS.length} animales en el hato</p></div>
+    <button class="btn btn-acc" data-open-vaca-form>+ Nueva vaca</button>
+  </div>
+
+  <div class="filters">
+    <div class="fsearch"><input type="text" id="fHatoSearch" placeholder="Buscar por arete o nombre..." value="${esc(params.q||"")}"></div>
+    <select id="fHatoProd"><option value="">Estado productivo (todos)</option>
+      ${Object.entries(ESTADO_PROD_LABEL).map(([k,v])=>`<option value="${k}" ${fp===k?'selected':''}>${v}</option>`).join("")}</select>
+    <select id="fHatoRepro"><option value="">Estado reproductivo (todos)</option>
+      <option value="preñada" ${fr==='preñada'?'selected':''}>Preñada</option><option value="no_preñada" ${fr==='no_preñada'?'selected':''}>No preñada</option></select>
+    <select id="fHatoSan"><option value="">Estado sanitario (todos)</option>
+      ${Object.entries(ESTADO_SAN_LABEL).map(([k,v])=>`<option value="${k}" ${fs===k?'selected':''}>${v}</option>`).join("")}</select>
+    ${(fp||fr||fs||params.q) ? `<a href="#/hato" class="filter-reset">Limpiar filtros</a>` : ""}
+  </div>
+
+  <div class="table-wrap">
+    <table><thead><tr><th>Arete</th><th>Nombre</th><th>Raza</th><th>Productivo</th><th>Reproductivo</th><th>Sanitario</th><th></th></tr></thead>
+    <tbody>
+      ${list.length ? list.map(v=>`
+        <tr>
+          <td>${eartag(v.arete)}</td>
+          <td><a href="#/hato/${v.id}" style="text-decoration:none;font-weight:700;">${esc(v.nombre)}</a></td>
+          <td>${esc(v.raza)}</td>
+          <td>${tagProd(v.estadoProductivo)}</td>
+          <td>${tagRepro(v.estadoReproductivo)}</td>
+          <td>${tagSan(v.estadoSanitario)}</td>
+          <td class="tbl-actions">
+            <a class="icbtn" href="#/hato/${v.id}" title="Ver ficha">👁</a>
+            <button class="icbtn" data-edit-vaca="${v.id}" title="Editar">✏️</button>
+            <button class="icbtn danger" data-del-vaca="${v.id}" title="Eliminar">🗑</button>
+          </td>
+        </tr>`).join("") : `<tr class="empty-row"><td colspan="7">No se encontraron vacas con estos filtros.</td></tr>`}
+    </tbody></table>
+    <div class="mtable">
+      ${list.length ? list.map(v=>`
+        <div class="mrow">
+          <div class="mrow-top">${eartag(v.arete)}<a href="#/hato/${v.id}" style="text-decoration:none;font-weight:700;">${esc(v.nombre)} →</a></div>
+          <div class="mrow-grid">
+            <div><div class="k">Raza</div>${esc(v.raza)}</div>
+            <div><div class="k">Productivo</div>${tagProd(v.estadoProductivo)}</div>
+            <div><div class="k">Reproductivo</div>${tagRepro(v.estadoReproductivo)}</div>
+            <div><div class="k">Sanitario</div>${tagSan(v.estadoSanitario)}</div>
+          </div>
+          <div class="mrow-actions">
+            <button class="icbtn" data-edit-vaca="${v.id}">✏️ Editar</button>
+            <button class="icbtn danger" data-del-vaca="${v.id}">🗑 Eliminar</button>
+          </div>
+        </div>`).join("") : `<div class="empty-alerts">No se encontraron vacas con estos filtros.</div>`}
+    </div>
+  </div>`;
+}
+
+function vacaFormModal(existing){
+  const v = existing || {arete:"",nombre:"",raza:RAZAS[0],fechaNacimiento:"",fechaIngreso:todayStr(),estadoProductivo:"produccion",estadoReproductivo:"no_preñada",estadoSanitario:"sana",observaciones:""};
+  openModal(`
+    <div class="modal-head"><h3>${existing?'Editar vaca':'Nueva vaca'}</h3><button class="modal-close" data-close-m>✕</button></div>
+    <form id="vacaForm">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="f" id="f_arete"><label>Número de arete <span class="req">*</span></label><input name="arete" value="${esc(v.arete)}" placeholder="Ej: BO-1042"><div class="err"></div></div>
+          <div class="f" id="f_nombre"><label>Nombre <span class="req">*</span></label><input name="nombre" value="${esc(v.nombre)}" placeholder="Ej: Lola"><div class="err"></div></div>
+        </div>
+        <div class="form-row">
+          <div class="f"><label>Raza</label><select name="raza">${RAZAS.map(r=>`<option ${v.raza===r?'selected':''}>${r}</option>`).join("")}</select></div>
+          <div class="f" id="f_nac"><label>Fecha de nacimiento</label><input type="date" name="fechaNacimiento" value="${v.fechaNacimiento}" max="${todayStr()}"><div class="err"></div></div>
+        </div>
+        <div class="form-row">
+          <div class="f"><label>Fecha de ingreso</label><input type="date" name="fechaIngreso" value="${v.fechaIngreso}" max="${todayStr()}"></div>
+          <div class="f"><label>Estado productivo</label><select name="estadoProductivo">${Object.entries(ESTADO_PROD_LABEL).map(([k,l])=>`<option value="${k}" ${v.estadoProductivo===k?'selected':''}>${l}</option>`).join("")}</select></div>
+        </div>
+        <div class="form-row">
+          <div class="f"><label>Estado reproductivo</label><select name="estadoReproductivo"><option value="preñada" ${v.estadoReproductivo==='preñada'?'selected':''}>Preñada</option><option value="no_preñada" ${v.estadoReproductivo==='no_preñada'?'selected':''}>No preñada</option></select></div>
+          <div class="f"><label>Estado sanitario</label><select name="estadoSanitario">${Object.entries(ESTADO_SAN_LABEL).map(([k,l])=>`<option value="${k}" ${v.estadoSanitario===k?'selected':''}>${l}</option>`).join("")}</select></div>
+        </div>
+        <div class="f"><label>Observaciones</label><textarea name="observaciones">${esc(v.observaciones)}</textarea></div>
+      </div>
+      <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-m>Cancelar</button><button type="submit" class="btn btn-acc">${existing?'Guardar cambios':'Registrar vaca'}</button></div>
+    </form>`);
+  q("[data-close-m]", q("#modalRoot")).onclick = closeModal;
+  qa("[data-close-m]", q("#modalRoot")).forEach(b=>b.onclick=closeModal);
+  q("#vacaForm").onsubmit = function(e){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const arete = fd.get("arete").trim(), nombre = fd.get("nombre").trim();
+    const nac = fd.get("fechaNacimiento");
+    let ok = true;
+    ok = validateField(q("#f_arete"), arete.length>0, "El número de arete es obligatorio.") && ok;
+    if(arete && VACAS.some(x=>x.arete.toLowerCase()===arete.toLowerCase() && (!existing || x.id!==existing.id))){
+      validateField(q("#f_arete"), false, "Ya existe una vaca con este número de arete."); ok=false;
+    }
+    ok = validateField(q("#f_nombre"), nombre.length>0, "El nombre es obligatorio.") && ok;
+    if(nac){ ok = validateField(q("#f_nac"), nac<=todayStr(), "La fecha de nacimiento no puede ser posterior a hoy.") && ok; }
+    if(!ok) return;
+    const data = {
+      arete, nombre, raza: fd.get("raza"), fechaNacimiento: nac, fechaIngreso: fd.get("fechaIngreso"),
+      estadoProductivo: fd.get("estadoProductivo"), estadoReproductivo: fd.get("estadoReproductivo"),
+      estadoSanitario: fd.get("estadoSanitario"), observaciones: fd.get("observaciones").trim()
+    };
+    if(existing){ actualizarVaca(existing.id, data); closeModal(); toast("Vaca actualizada correctamente.", {view:()=>navigate("#/hato/"+existing.id)}); render(); }
+    else{ const created = guardarVaca(data); closeModal(); toast("Registro guardado correctamente.", {again:()=>vacaFormModal(), view:()=>navigate("#/hato/"+created.id)}); render(); }
+  };
+}
+
+/* =====================================================================
+   VISTA: FICHA INDIVIDUAL VACA
+===================================================================== */
+let fichaTab = "info";
+function viewFichaVaca(id){
+  const v = vacaById(id);
+  if(!v) return `<div class="card">Vaca no encontrada. <a href="#/hato">Volver al listado</a></div>`;
+  const prod = PRODUCCION.filter(p=>p.vacaId===id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const hoy = todayStr();
+  const prodHoy = prod.filter(p=>p.fecha===hoy).reduce((s,p)=>s+p.litros,0);
+  const last7dates = [...Array(7)].map((_,i)=>daysAgo(6-i));
+  const prod7 = prod.filter(p=>last7dates.includes(p.fecha)).reduce((s,p)=>s+p.litros,0);
+  const diasConDato = new Set(prod.filter(p=>last7dates.includes(p.fecha)).map(p=>p.fecha)).size;
+  const promedio = diasConDato ? prod7/diasConDato : 0;
+  const acumulado = prod.reduce((s,p)=>s+p.litros,0);
+  const eventos = EVENTOS_SANITARIOS.filter(e=>e.animalTipo==="vaca" && e.animalId===id).sort((a,b)=>(b.fechaInicio||b.fecha||"").localeCompare(a.fechaInicio||a.fecha||""));
+
+  const tabs = [["info","Información"],["produccion","Producción"],["sanitario","Sanidad"],["reproductivo","Reproducción"]];
+  let body = "";
+  if(fichaTab==="info"){
+    body = `<div class="info-grid">
+      <div class="it"><div class="k">Arete</div><div class="v">${eartag(v.arete)}</div></div>
+      <div class="it"><div class="k">Raza</div><div class="v">${esc(v.raza)}</div></div>
+      <div class="it"><div class="k">Edad</div><div class="v">${v.fechaNacimiento?edadDesde(v.fechaNacimiento):'—'}</div></div>
+      <div class="it"><div class="k">Fecha de nacimiento</div><div class="v">${fmtFecha(v.fechaNacimiento)}</div></div>
+      <div class="it"><div class="k">Fecha de ingreso</div><div class="v">${fmtFecha(v.fechaIngreso)}</div></div>
+      <div class="it"><div class="k">Estado sanitario</div><div class="v">${tagSan(v.estadoSanitario)}</div></div>
+    </div>
+    ${v.observaciones ? `<div class="hr"></div><div class="it"><div class="k">Observaciones</div><div class="v" style="font-weight:400;">${esc(v.observaciones)}</div></div>` : ""}`;
+  } else if(fichaTab==="produccion"){
+    body = `<div class="grid grid-3" style="margin-bottom:18px;">
+      <div class="card kpi"><div class="lbl">Producción de hoy</div><div class="val">${prodHoy? numLitros(prodHoy) : '<small>Sin datos registrados</small>'}</div></div>
+      <div class="card kpi"><div class="lbl">Promedio (7 días)</div><div class="val">${promedio? numLitros(+promedio.toFixed(1)) : '<small>Sin datos</small>'}</div></div>
+      <div class="card kpi"><div class="lbl">Acumulado disponible</div><div class="val">${numLitros(acumulado)}</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Turno</th><th class="tright">Litros</th><th>Registrado por</th></tr></thead>
+    <tbody>${prod.length ? prod.slice(0,25).map(p=>`<tr><td>${fmtFecha(p.fecha)}</td><td style="text-transform:capitalize">${p.turno}</td><td class="tright mono">${p.litros} L</td><td>${esc(p.registradoPor)}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="4">Sin datos registrados.</td></tr>`}</tbody></table></div>`;
+  } else if(fichaTab==="sanitario"){
+    body = `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Evento</th><th>Tratamiento</th><th>Responsable</th><th>Estado</th></tr></thead>
+    <tbody>${eventos.length ? eventos.map(e=>`<tr><td>${fmtFecha(e.fechaInicio||e.fecha)}</td><td>${esc(e.tipo)}</td><td>${esc(e.tratamiento||"—")}</td><td>${esc(e.responsable||"—")}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="5">Sin eventos sanitarios registrados.</td></tr>`}</tbody></table></div>`;
+  } else if(fichaTab==="reproductivo"){
+    body = `<div class="info-grid">
+      <div class="it"><div class="k">Estado</div><div class="v">${tagRepro(v.estadoReproductivo)}</div></div>
+    </div>
+    <div class="f" style="margin-top:16px;max-width:340px;"><label>Actualizar estado reproductivo</label>
+      <select id="reproQuick"><option value="preñada" ${v.estadoReproductivo==='preñada'?'selected':''}>Preñada</option><option value="no_preñada" ${v.estadoReproductivo==='no_preñada'?'selected':''}>No preñada</option></select>
+    </div>
+    <button class="btn btn-acc btn-sm" id="reproSaveBtn">Guardar estado</button>`;
+  }
+
+  return `
+  <div class="breadcrumb"><a href="#/hato">Hato</a> / ${esc(v.nombre)}</div>
+  <div class="ficha-head">
+    <div class="ficha-avatar">🐄</div>
+    <div>
+      <h1 style="font-size:22px;">${esc(v.nombre)}</h1>
+      <div class="ficha-tags">${eartag(v.arete)}${tagProd(v.estadoProductivo)}${tagRepro(v.estadoReproductivo)}${tagSan(v.estadoSanitario)}</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-sm" data-edit-vaca="${v.id}">✏️ Editar</button>
+      <button class="btn btn-sm btn-danger" data-del-vaca="${v.id}">🗑 Eliminar</button>
+    </div>
+  </div>
+  <div class="tabs">${tabs.map(([k,l])=>`<div class="tab ${fichaTab===k?'active':''}" data-ficha-tab="${k}">${l}</div>`).join("")}</div>
+  <div class="card">${body}</div>
+  `;
+}
+
+/* =====================================================================
+   VISTA: PRODUCCIÓN — REGISTRO
+===================================================================== */
+function viewProduccionForm(){
+  const hoy = todayStr();
+  const prodHoy = PRODUCCION.filter(p=>p.fecha===hoy).reduce((s,p)=>s+p.litros,0);
+  const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion");
+  return `
+  <div class="page-head"><div><h1>Registro de producción</h1><p class="sub">Producción total de hoy: ${prodHoy? numLitros(prodHoy) : 'sin datos registrados'}</p></div>
+    <a href="#/produccion/historial" class="btn btn-ghost">Ver historial →</a></div>
+  <div class="card" style="max-width:560px;">
+    <form id="prodForm">
+      <div class="form-row">
+        <div class="f" id="f_pvaca"><label>Vaca <span class="req">*</span></label>
+          <select name="vacaId"><option value="">Seleccionar vaca...</option>${enProd.map(v=>`<option value="${v.id}">${v.arete} — ${v.nombre}</option>`).join("")}</select><div class="err"></div></div>
+        <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
+      </div>
+      <div class="form-row">
+        <div class="f"><label>Turno</label><select name="turno"><option>mañana</option><option>tarde</option><option>noche</option></select></div>
+        <div class="f" id="f_plitros"><label>Litros obtenidos <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" placeholder="Ej: 9.5"><div class="err"></div></div>
+      </div>
+      <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--surface-alt);"></div>
+      <div class="f"><label>Observaciones</label><textarea name="observaciones" placeholder="Opcional"></textarea></div>
+      <button type="submit" class="btn btn-acc" style="width:100%;">Guardar registro</button>
+    </form>
+  </div>`;
+}
+
+/* =====================================================================
+   VISTA: PRODUCCIÓN — HISTORIAL
+===================================================================== */
+function viewProduccionHistorial(params){
+  const fv = params.vaca||"", ff = params.fecha||"", ft = params.turno||"";
+  let list = PRODUCCION.slice().sort((a,b)=> b.fecha.localeCompare(a.fecha)).filter(p=>{
+    if(fv && p.vacaId!==fv) return false;
+    if(ff && p.fecha!==ff) return false;
+    if(ft && p.turno!==ft) return false;
+    return true;
+  });
+  const total = list.reduce((s,p)=>s+p.litros,0);
+  return `
+  <div class="page-head"><div><h1>Historial de producción</h1><p class="sub">${list.length} registros — total ${numLitros(total)}</p></div>
+  <button class="btn btn-acc" data-goto="#/produccion">+ Registrar producción</button></div>
+  <div class="filters">
+    <select id="fProdVaca"><option value="">Vaca (todas)</option>${VACAS.map(v=>`<option value="${v.id}" ${fv===v.id?'selected':''}>${v.arete} — ${v.nombre}</option>`).join("")}</select>
+    <input type="date" id="fProdFecha" value="${ff}">
+    <select id="fProdTurno"><option value="">Turno (todos)</option><option ${ft==='mañana'?'selected':''}>mañana</option><option ${ft==='tarde'?'selected':''}>tarde</option><option ${ft==='noche'?'selected':''}>noche</option></select>
+    ${(fv||ff||ft) ? `<a href="#/produccion/historial" class="filter-reset">Limpiar filtros</a>` : ""}
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Vaca</th><th>Turno</th><th class="tright">Litros</th><th>Registrado por</th><th></th></tr></thead>
+  <tbody>${list.length? list.slice(0,80).map(p=>{ const v = vacaById(p.vacaId); return `
+    <tr><td>${fmtFecha(p.fecha)}</td><td>${eartag(v?v.arete:'—')} ${esc(v?v.nombre:'')}</td><td style="text-transform:capitalize">${p.turno}</td>
+    <td class="tright mono">${p.litros} L</td><td>${esc(p.registradoPor)}</td>
+    <td class="tbl-actions"><button class="icbtn danger" data-del-prod="${p.id}">🗑</button></td></tr>`; }).join("") : `<tr class="empty-row"><td colspan="6">Sin datos registrados.</td></tr>`}
+  </tbody></table></div>`;
+}
+
+/* =====================================================================
+   VISTA: PIL (registro + historial + comparación)
+===================================================================== */
+function viewPIL(params){
+  const hoy = todayStr();
+  const list = ENTREGAS_PIL.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const compareRows = list.map(e=>{
+    const prodDia = PRODUCCION.filter(p=>p.fecha===e.fecha).reduce((s,p)=>s+p.litros,0);
+    return {fecha:e.fecha, prod:prodDia, entrega:e.litros, dif: prodDia-e.litros};
+  });
+  return `
+  <div class="page-head"><div><h1>Entrega a PIL</h1><p class="sub">Registro y comparación con producción diaria</p></div></div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:12px;">Registrar entrega</h3>
+      <form id="pilForm">
+        <div class="form-row">
+          <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
+          <div class="f"><label>Hora</label><input type="time" name="hora" value="07:30"></div>
+        </div>
+        <div class="form-row">
+          <div class="f" id="f_pillitros"><label>Litros entregados <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" placeholder="Ej: 480"><div class="err"></div></div>
+          <div class="f" id="f_pilprecio"><label>Precio por litro (Bs) <span class="req">*</span></label><input type="number" step="0.01" min="0" name="precioLitro" value="3.90"><div class="err"></div></div>
+        </div>
+        <div class="f"><label>Monto total</label><input id="pilMontoPreview" readonly value="Bs 0.00" style="background:var(--surface-alt);font-weight:700;"></div>
+        <div class="form-row">
+          <div class="f"><label>N° de comprobante</label><input name="comprobante" placeholder="Ej: PIL-58210"></div>
+          <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--surface-alt);"></div>
+        </div>
+        <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
+        <button type="submit" class="btn btn-acc" style="width:100%;">Guardar entrega</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:4px;">Producción vs. entrega</h3>
+      <p class="sub" style="margin-bottom:12px;">Diferencias por fecha — umbral configurado: ${STATE.umbralDiferencia} L</p>
+      <div class="table-wrap"><table><thead><tr><th>Fecha</th><th class="tright">Producción</th><th class="tright">Entrega</th><th class="tright">Diferencia</th></tr></thead>
+      <tbody>${compareRows.length? compareRows.slice(0,10).map(r=>`
+        <tr><td>${fmtFecha(r.fecha)}</td><td class="tright mono">${r.prod} L</td><td class="tright mono">${r.entrega} L</td>
+        <td class="tright mono" style="font-weight:700;color:${Math.abs(r.dif)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${r.dif} L</td></tr>`).join("") : `<tr class="empty-row"><td colspan="4">Sin datos registrados.</td></tr>`}
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="sec-title"><h2>Historial de entregas</h2></div>
+  <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros</th><th class="tright">Precio</th><th class="tright">Monto</th><th>Comprobante</th><th></th></tr></thead>
+  <tbody>${list.length? list.map(e=>`
+    <tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(e.precioLitro)}</td><td class="tright mono">${numBs(e.monto)}</td><td class="mono">${esc(e.comprobante)}</td>
+    <td class="tbl-actions"><button class="icbtn danger" data-del-pil="${e.id}">🗑</button></td></tr>`).join("") : `<tr class="empty-row"><td colspan="7">Sin datos registrados.</td></tr>`}
+  </tbody></table></div>`;
+}
+
+/* =====================================================================
+   VISTA: SANIDAD — REGISTRO
+===================================================================== */
+function viewSanidadForm(){
+  return `
+  <div class="page-head"><div><h1>Registro sanitario</h1><p class="sub">Selecciona el tipo de evento y el animal afectado</p></div>
+  <a href="#/sanidad/historial" class="btn btn-ghost">Ver historial →</a></div>
+  <div class="card" style="max-width:600px;">
+    <form id="sanForm">
+      <div class="form-row">
+        <div class="f"><label>Tipo de animal</label><select name="animalTipo" id="sanAnimalTipo"><option value="vaca">Vaca</option><option value="ternero">Ternero</option></select></div>
+        <div class="f" id="f_sananimal"><label>Animal <span class="req">*</span></label><select name="animalId" id="sanAnimalId"></select><div class="err"></div></div>
+      </div>
+      <div class="f"><label>Tipo de evento</label>
+        <select name="tipo" id="sanTipo">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join("")}</select>
+      </div>
+      <div id="sanDynamicFields"></div>
+      <div class="form-row">
+        <div class="f"><label>Responsable</label><select name="responsable">${VETERINARIOS.map(v=>`<option>${v}</option>`).join("")}</select></div>
+        <div class="f"><label>Costo (Bs)</label><input type="number" min="0" step="0.5" name="costo" value="0"></div>
+      </div>
+      <div class="f"><label>Estado</label><select name="estado"><option value="activo">Activo</option><option value="finalizado">Finalizado</option></select></div>
+      <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
+      <button type="submit" class="btn btn-acc" style="width:100%;">Guardar evento sanitario</button>
+    </form>
+  </div>`;
+}
+function sanDynamicHTML(tipo){
+  const hoy = todayStr();
+  if(tipo==="Tratamiento de mastitis"){
+    return `<div class="fieldset-note">Campos específicos para tratamiento de mastitis.</div>
+    <div class="form-row">
+      <div class="f"><label>Fecha de diagnóstico</label><input type="date" name="fechaDiagnostico" value="${hoy}" max="${hoy}"></div>
+      <div class="f"><label>Fecha de inicio</label><input type="date" name="fechaInicio" value="${hoy}" max="${hoy}"></div>
+    </div>
+    <div class="f"><label>Descripción</label><textarea name="descripcion" placeholder="Cuarto afectado, síntomas..."></textarea></div>
+    <div class="form-row">
+      <div class="f"><label>Medicamento</label><input name="producto" placeholder="Ej: Cefalosporina intramamaria"></div>
+      <div class="f"><label>Tratamiento aplicado</label><input name="tratamiento" placeholder="Ej: cada 12h por 5 días"></div>
+    </div>
+    <div class="f"><label>Fecha de finalización (si aplica)</label><input type="date" name="fechaFin"></div>`;
+  }
+  if(tipo==="Lesión física"){
+    return `<div class="fieldset-note">Campos específicos para lesión física.</div>
+    <div class="form-row">
+      <div class="f"><label>Tipo de lesión</label><input name="tipoLesion" placeholder="Ej: corte, golpe, cojera"></div>
+      <div class="f"><label>Ubicación</label><input name="ubicacion" placeholder="Ej: pata trasera izquierda"></div>
+    </div>
+    <div class="f"><label>Descripción</label><textarea name="descripcion"></textarea></div>
+    <div class="form-row">
+      <div class="f"><label>Tratamiento</label><input name="tratamiento"></div>
+      <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
+    </div>`;
+  }
+  return `<div class="form-row">
+    <div class="f"><label>Fecha de inicio</label><input type="date" name="fechaInicio" value="${hoy}" max="${hoy}"></div>
+    <div class="f"><label>Fecha de finalización (si aplica)</label><input type="date" name="fechaFin"></div>
+  </div>
+  <div class="f"><label>Descripción</label><textarea name="descripcion"></textarea></div>
+  <div class="form-row">
+    <div class="f"><label>Producto/medicamento</label><input name="producto"></div>
+    <div class="f"><label>Tratamiento aplicado</label><input name="tratamiento"></div>
+  </div>`;
+}
+
+/* =====================================================================
+   VISTA: SANIDAD — HISTORIAL
+===================================================================== */
+function viewSanidadHistorial(params){
+  const fa = params.animal||"", ftipo = params.tipo||"", fest = params.estado||"", ffecha = params.fecha||"";
+  let list = EVENTOS_SANITARIOS.slice().sort((a,b)=>(b.fechaInicio||b.fecha||"").localeCompare(a.fechaInicio||a.fecha||"")).filter(e=>{
+    if(fa && e.animalId!==fa) return false;
+    if(ftipo && e.tipo!==ftipo) return false;
+    if(fest && e.estado!==fest) return false;
+    if(ffecha && (e.fechaInicio||e.fecha)!==ffecha) return false;
+    return true;
+  });
+  function animalLabel(e){
+    if(e.animalTipo==="vaca"){ const v = vacaById(e.animalId); return v? `${eartag(v.arete)} ${esc(v.nombre)}` : "—"; }
+    const t = terneroById(e.animalId); return t? `${eartag(t.arete)} ${esc(t.nombre)}` : "—";
+  }
+  return `
+  <div class="page-head"><div><h1>Historial sanitario</h1><p class="sub">${list.length} eventos registrados</p></div>
+  <button class="btn btn-acc" data-goto="#/sanidad">+ Nuevo evento</button></div>
+  <div class="filters">
+    <select id="fSanTipo"><option value="">Tipo (todos)</option>${TIPOS_EVENTO.map(t=>`<option ${ftipo===t?'selected':''}>${t}</option>`).join("")}</select>
+    <select id="fSanEstado"><option value="">Estado (todos)</option><option value="activo" ${fest==='activo'?'selected':''}>Activo</option><option value="finalizado" ${fest==='finalizado'?'selected':''}>Finalizado</option></select>
+    <input type="date" id="fSanFecha" value="${ffecha}">
+    ${(ftipo||fest||ffecha||fa) ? `<a href="#/sanidad/historial" class="filter-reset">Limpiar filtros</a>` : ""}
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Animal</th><th>Evento</th><th>Responsable</th><th class="tright">Costo</th><th>Estado</th><th></th></tr></thead>
+  <tbody>${list.length? list.slice(0,80).map(e=>`
+    <tr><td>${fmtFecha(e.fechaInicio||e.fecha||e.fechaDiagnostico)}</td><td>${animalLabel(e)}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td>
+    <td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td>
+    <td class="tbl-actions"><button class="icbtn danger" data-del-san="${e.id}">🗑</button></td></tr>`).join("") : `<tr class="empty-row"><td colspan="7">Sin datos registrados.</td></tr>`}
+  </tbody></table></div>`;
+}
+
+/* =====================================================================
+   VISTA: TERNERAJE
+===================================================================== */
+function viewTerneraje(params){
+  const search = (params.q||"").toLowerCase();
+  const fe = params.estado||"";
+  let list = TERNEROS.filter(t=>{
+    if(fe && t.estado!==fe) return false;
+    if(search && !(t.arete.toLowerCase().includes(search)||t.nombre.toLowerCase().includes(search))) return false;
+    return true;
+  });
+  return `
+  <div class="page-head"><div><h1>Terneraje</h1><p class="sub">${TERNEROS.length} terneros registrados</p></div>
+  <button class="btn btn-acc" data-open-ternero-form>+ Nuevo ternero</button></div>
+  <div class="filters">
+    <div class="fsearch"><input type="text" id="fTerSearch" placeholder="Buscar por arete o nombre..." value="${esc(params.q||"")}"></div>
+    <select id="fTerEstado"><option value="">Estado (todos)</option><option value="activo" ${fe==='activo'?'selected':''}>Activo</option><option value="vendido" ${fe==='vendido'?'selected':''}>Vendido</option><option value="fallecido" ${fe==='fallecido'?'selected':''}>Fallecido</option></select>
+    ${(fe||params.q)?`<a href="#/terneraje" class="filter-reset">Limpiar filtros</a>`:""}
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Arete</th><th>Nombre</th><th>Sexo</th><th>Edad</th><th>Madre</th><th class="tright">Peso actual</th><th>Estado</th><th></th></tr></thead>
+  <tbody>${list.length? list.map(t=>{ const m=vacaById(t.madreId);
+    return `<tr><td>${eartag(t.arete)}</td><td><a href="#/ternero/${t.id}" style="text-decoration:none;font-weight:700;">${esc(t.nombre)}</a></td><td>${t.sexo}</td>
+    <td>${edadDesde(t.fechaNacimiento)}</td><td>${m? esc(m.nombre) : '—'}</td><td class="tright mono">${t.pesoActual} kg</td>
+    <td>${t.estado==='activo'?tag('Activo','positive'):t.estado==='vendido'?tag('Vendido','info'):tag('Fallecido','neutral')}</td>
+    <td class="tbl-actions"><a class="icbtn" href="#/ternero/${t.id}">👁</a><button class="icbtn danger" data-del-ternero="${t.id}">🗑</button></td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="8">No se encontraron terneros con estos filtros.</td></tr>`}
+  </tbody></table>
+  <div class="mtable">${list.length? list.map(t=>{const m=vacaById(t.madreId); return `
+    <div class="mrow"><div class="mrow-top">${eartag(t.arete)}<a href="#/ternero/${t.id}" style="text-decoration:none;font-weight:700;">${esc(t.nombre)} →</a></div>
+    <div class="mrow-grid"><div><div class="k">Sexo</div>${t.sexo}</div><div><div class="k">Edad</div>${edadDesde(t.fechaNacimiento)}</div>
+    <div><div class="k">Peso actual</div>${t.pesoActual} kg</div><div><div class="k">Estado</div>${t.estado==='activo'?tag('Activo','positive'):t.estado==='vendido'?tag('Vendido','info'):tag('Fallecido','neutral')}</div></div></div>`;}).join("") : `<div class="empty-alerts">No se encontraron terneros.</div>`}</div>
+  </div>`;
+}
+function terneroFormModal(existing){
+  const t = existing || {arete:"",nombre:"",sexo:"Hembra",fechaNacimiento:"",madreId:"",padre:"",pesoNacimiento:"",pesoActual:"",estadoSalud:"Sano",estado:"activo",observaciones:""};
+  openModal(`
+    <div class="modal-head"><h3>${existing?'Editar ternero':'Nuevo ternero'}</h3><button class="modal-close" data-close-m>✕</button></div>
+    <form id="terForm"><div class="modal-body">
+      <div class="form-row">
+        <div class="f" id="f_tarete"><label>Arete <span class="req">*</span></label><input name="arete" value="${esc(t.arete)}"><div class="err"></div></div>
+        <div class="f" id="f_tnombre"><label>Nombre <span class="req">*</span></label><input name="nombre" value="${esc(t.nombre)}"><div class="err"></div></div>
+      </div>
+      <div class="form-row">
+        <div class="f"><label>Sexo</label><select name="sexo"><option ${t.sexo==='Hembra'?'selected':''}>Hembra</option><option ${t.sexo==='Macho'?'selected':''}>Macho</option></select></div>
+        <div class="f" id="f_tnac"><label>Fecha de nacimiento</label><input type="date" name="fechaNacimiento" value="${t.fechaNacimiento}" max="${todayStr()}"><div class="err"></div></div>
+      </div>
+      <div class="form-row">
+        <div class="f"><label>Madre</label><select name="madreId"><option value="">No registrada</option>${VACAS.map(v=>`<option value="${v.id}" ${t.madreId===v.id?'selected':''}>${v.arete} — ${v.nombre}</option>`).join("")}</select></div>
+        <div class="f"><label>Padre (si se conoce)</label><input name="padre" value="${esc(t.padre)}"></div>
+      </div>
+      <div class="form-row">
+        <div class="f" id="f_tpn"><label>Peso al nacimiento (kg)</label><input type="number" step="0.1" min="0" name="pesoNacimiento" value="${t.pesoNacimiento}"><div class="err"></div></div>
+        <div class="f"><label>Estado de salud</label><input name="estadoSalud" value="${esc(t.estadoSalud)}"></div>
+      </div>
+      <div class="f"><label>Estado del animal</label><select name="estado"><option value="activo" ${t.estado==='activo'?'selected':''}>Activo</option><option value="vendido" ${t.estado==='vendido'?'selected':''}>Vendido</option><option value="fallecido" ${t.estado==='fallecido'?'selected':''}>Fallecido</option><option value="otro" ${t.estado==='otro'?'selected':''}>Otro</option></select></div>
+      <div class="f"><label>Observaciones</label><textarea name="observaciones">${esc(t.observaciones)}</textarea></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-m>Cancelar</button><button type="submit" class="btn btn-acc">${existing?'Guardar cambios':'Registrar ternero'}</button></div>
+    </form>`);
+  qa("[data-close-m]", q("#modalRoot")).forEach(b=>b.onclick=closeModal);
+  q("#terForm").onsubmit = function(e){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const arete = fd.get("arete").trim(), nombre = fd.get("nombre").trim(), nac = fd.get("fechaNacimiento");
+    const pesoNac = parseFloat(fd.get("pesoNacimiento"));
+    let ok = true;
+    ok = validateField(q("#f_tarete"), arete.length>0, "El arete es obligatorio.") && ok;
+    if(arete && TERNEROS.some(x=>x.arete.toLowerCase()===arete.toLowerCase() && (!existing||x.id!==existing.id))){ validateField(q("#f_tarete"), false, "Ya existe un ternero con este arete."); ok=false; }
+    ok = validateField(q("#f_tnombre"), nombre.length>0, "El nombre es obligatorio.") && ok;
+    if(nac) ok = validateField(q("#f_tnac"), nac<=todayStr(), "La fecha de nacimiento no puede ser posterior a hoy.") && ok;
+    ok = validateField(q("#f_tpn"), isNaN(pesoNac) || (pesoNac>=0 && pesoNac<80), "Ingresa un peso razonable (0–80 kg).") && ok;
+    if(!ok) return;
+    const data = {arete,nombre,sexo:fd.get("sexo"),fechaNacimiento:nac,madreId:fd.get("madreId")||"",padre:fd.get("padre").trim(),
+      pesoNacimiento: isNaN(pesoNac)?0:pesoNac, pesoActual: existing? existing.pesoActual : (isNaN(pesoNac)?0:pesoNac),
+      fechaUltimoPesaje: existing? existing.fechaUltimoPesaje : todayStr(),
+      estadoSalud:fd.get("estadoSalud").trim()||"Sano", estado:fd.get("estado"), observaciones:fd.get("observaciones").trim()};
+    if(existing){ actualizarTernero(existing.id, data); closeModal(); toast("Ternero actualizado correctamente.", {view:()=>navigate("#/ternero/"+existing.id)}); render(); }
+    else{ const created = guardarTernero(data); closeModal(); toast("Registro guardado correctamente.", {again:()=>terneroFormModal(), view:()=>navigate("#/ternero/"+created.id)}); render(); }
+  };
+}
+
+function viewFichaTernero(id){
+  const t = terneroById(id);
+  if(!t) return `<div class="card">Ternero no encontrado. <a href="#/terneraje">Volver al listado</a></div>`;
+  const madre = vacaById(t.madreId);
+  const pesajes = getPesajes(id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const eventos = EVENTOS_SANITARIOS.filter(e=>e.animalTipo==="ternero" && e.animalId===id).sort((a,b)=>(b.fechaInicio||b.fecha||"").localeCompare(a.fechaInicio||a.fecha||""));
+  return `
+  <div class="breadcrumb"><a href="#/terneraje">Terneraje</a> / ${esc(t.nombre)}</div>
+  <div class="ficha-head">
+    <div class="ficha-avatar">🐮</div>
+    <div><h1 style="font-size:22px;">${esc(t.nombre)}</h1>
+      <div class="ficha-tags">${eartag(t.arete)}${tag(t.sexo,'neutral')}${t.estado==='activo'?tag('Activo','positive'):t.estado==='vendido'?tag('Vendido','info'):tag('Fallecido','neutral')}</div></div>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-sm btn-acc" data-open-pesaje="${t.id}">⚖️ Registrar pesaje</button>
+      <button class="btn btn-sm" data-edit-ternero="${t.id}">✏️ Editar</button>
+    </div>
+  </div>
+  <div class="grid grid-3" style="margin-bottom:18px;">
+    <div class="card kpi"><div class="lbl">Peso al nacimiento</div><div class="val">${t.pesoNacimiento} <small>kg</small></div></div>
+    <div class="card kpi"><div class="lbl">Peso actual</div><div class="val">${t.pesoActual} <small>kg</small></div></div>
+    <div class="card kpi"><div class="lbl">Último pesaje</div><div class="val" style="font-size:18px;">${fmtFecha(t.fechaUltimoPesaje)}</div></div>
+  </div>
+  <div class="info-grid card" style="margin-bottom:18px;">
+    <div class="it"><div class="k">Madre</div><div class="v">${madre? esc(madre.nombre) : '—'}</div></div>
+    <div class="it"><div class="k">Padre</div><div class="v">${t.padre? esc(t.padre) : '—'}</div></div>
+    <div class="it"><div class="k">Fecha de nacimiento</div><div class="v">${fmtFecha(t.fechaNacimiento)} (${edadDesde(t.fechaNacimiento)})</div></div>
+    <div class="it"><div class="k">Estado de salud</div><div class="v">${esc(t.estadoSalud)}</div></div>
+  </div>
+  <div class="sec-title"><h2>Historial de pesaje</h2></div>
+  <div class="table-wrap" style="margin-bottom:20px;"><table><thead><tr><th>Fecha</th><th class="tright">Peso</th><th>Observaciones</th></tr></thead>
+  <tbody>${pesajes.length? pesajes.map(p=>`<tr><td>${fmtFecha(p.fecha)}</td><td class="tright mono">${p.peso} kg</td><td>${esc(p.observaciones||'—')}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="3">Sin pesajes registrados.</td></tr>`}</tbody></table></div>
+  <div class="sec-title"><h2>Historial sanitario</h2></div>
+  <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Evento</th><th>Responsable</th><th>Estado</th></tr></thead>
+  <tbody>${eventos.length? eventos.map(e=>`<tr><td>${fmtFecha(e.fechaInicio||e.fecha)}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="4">Sin eventos sanitarios registrados.</td></tr>`}</tbody></table></div>
+  `;
+}
+function pesajeModal(terneroId){
+  const t = terneroById(terneroId);
+  openModal(`
+    <div class="modal-head"><h3>Registrar pesaje — ${esc(t.nombre)}</h3><button class="modal-close" data-close-m>✕</button></div>
+    <form id="pesajeForm"><div class="modal-body">
+      <div class="form-row">
+        <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${todayStr()}" max="${todayStr()}"></div>
+        <div class="f" id="f_peso"><label>Peso (kg) <span class="req">*</span></label><input type="number" step="0.1" min="0" name="peso" placeholder="Ej: 62.5"><div class="err"></div></div>
+      </div>
+      <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-m>Cancelar</button><button type="submit" class="btn btn-acc">Guardar pesaje</button></div>
+    </form>`);
+  qa("[data-close-m]", q("#modalRoot")).forEach(b=>b.onclick=closeModal);
+  q("#pesajeForm").onsubmit = function(e){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const peso = parseFloat(fd.get("peso"));
+    if(!validateField(q("#f_peso"), !isNaN(peso) && peso>=0 && peso<700, "Ingresa un peso válido.")) return;
+    guardarPesaje({terneroId, fecha: fd.get("fecha"), peso, observaciones: fd.get("observaciones").trim()});
+    closeModal(); toast("Pesaje registrado correctamente."); navigate("#/ternero/"+terneroId); render();
+  };
+}
+
+/* =====================================================================
+   VISTA: REPORTES
+===================================================================== */
+let reporteTab = "produccion";
+function viewReportes(params){
+  const tabs = [["produccion","Producción"],["pil","Entregas PIL"],["sanitario","Sanitario"],["hato","Hato"],["terneros","Terneros"]];
+  let body = "";
+  if(reporteTab==="produccion"){
+    const rows = PRODUCCION.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,50);
+    const total = PRODUCCION.reduce((s,p)=>s+p.litros,0);
+    body = `<p class="sub" style="margin-bottom:12px;">Total acumulado: ${numLitros(total)}</p>
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Vaca</th><th>Turno</th><th class="tright">Litros</th><th class="tright">Total del día</th></tr></thead>
+    <tbody>${rows.map(p=>{const v=vacaById(p.vacaId); const totalDia=PRODUCCION.filter(x=>x.fecha===p.fecha).reduce((s,x)=>s+x.litros,0); return `<tr><td>${fmtFecha(p.fecha)}</td><td>${v?esc(v.nombre):'—'}</td><td style="text-transform:capitalize">${p.turno}</td><td class="tright mono">${p.litros} L</td><td class="tright mono">${totalDia} L</td></tr>`;}).join("")}</tbody></table></div>`;
+  } else if(reporteTab==="pil"){
+    body = `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th class="tright">Litros</th><th class="tright">Precio</th><th class="tright">Monto</th><th class="tright">Diferencia c/ producción</th></tr></thead>
+    <tbody>${ENTREGAS_PIL.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(e=>{const prod=PRODUCCION.filter(p=>p.fecha===e.fecha).reduce((s,p)=>s+p.litros,0); return `<tr><td>${fmtFecha(e.fecha)}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(e.precioLitro)}</td><td class="tright mono">${numBs(e.monto)}</td><td class="tright mono">${prod-e.litros} L</td></tr>`;}).join("")}</tbody></table></div>`;
+  } else if(reporteTab==="sanitario"){
+    body = `<div class="table-wrap"><table><thead><tr><th>Vaca/Ternero</th><th>Evento</th><th>Fecha</th><th>Tratamiento</th><th>Estado</th></tr></thead>
+    <tbody>${EVENTOS_SANITARIOS.slice().sort((a,b)=>(b.fechaInicio||b.fecha||"").localeCompare(a.fechaInicio||a.fecha||"")).map(e=>{
+      const a = e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId);
+      return `<tr><td>${a?esc(a.nombre):'—'}</td><td>${esc(e.tipo)}</td><td>${fmtFecha(e.fechaInicio||e.fecha)}</td><td>${esc(e.tratamiento||'—')}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td></tr>`;
+    }).join("")}</tbody></table></div>`;
+  } else if(reporteTab==="hato"){
+    const g = k=>VACAS.filter(v=>v.estadoProductivo===k).length;
+    body = `<div class="grid grid-4">
+      <div class="card kpi"><div class="lbl">Total</div><div class="val">${VACAS.length}</div></div>
+      <div class="card kpi"><div class="lbl">En producción</div><div class="val">${g('produccion')}</div></div>
+      <div class="card kpi"><div class="lbl">Secado</div><div class="val">${g('secado')}</div></div>
+      <div class="card kpi"><div class="lbl">Descarte</div><div class="val">${g('descarte')}</div></div>
+      <div class="card kpi"><div class="lbl">Con mastitis</div><div class="val">${VACAS.filter(v=>v.estadoSanitario==='mastitis').length}</div></div>
+      <div class="card kpi"><div class="lbl">Preñadas</div><div class="val">${VACAS.filter(v=>v.estadoReproductivo==='preñada').length}</div></div>
+      <div class="card kpi"><div class="lbl">No preñadas</div><div class="val">${VACAS.filter(v=>v.estadoReproductivo==='no_preñada').length}</div></div>
+    </div>`;
+  } else if(reporteTab==="terneros"){
+    body = `<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Sexo</th><th>Edad</th><th class="tright">Peso actual</th><th>Estado</th></tr></thead>
+    <tbody>${TERNEROS.map(t=>`<tr><td>${esc(t.nombre)}</td><td>${t.sexo}</td><td>${edadDesde(t.fechaNacimiento)}</td><td class="tright mono">${t.pesoActual} kg</td><td>${t.estado}</td></tr>`).join("")}</tbody></table></div>`;
+  }
+  return `
+  <div class="page-head"><div><h1>Reportes</h1><p class="sub">Consulta información filtrable por fecha y categoría</p></div></div>
+  <div class="filters"><input type="date" placeholder="Desde"><input type="date" placeholder="Hasta"><span class="muted" style="font-size:12px;">Los filtros de fecha se aplicarán al conectar con la base de datos completa.</span></div>
+  <div class="tabs">${tabs.map(([k,l])=>`<div class="tab ${reporteTab===k?'active':''}" data-reporte-tab="${k}">${l}</div>`).join("")}</div>
+  ${body}`;
+}
+
+/* =====================================================================
+   VISTA: CONFIGURACIÓN
+===================================================================== */
+function viewConfiguracion(){
+  return `
+  <div class="page-head"><div><h1>Configuración</h1><p class="sub">Parámetros generales del sistema (modo demostración)</p></div></div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:10px;">Usuarios</h3>
+      <div class="stack">${USUARIOS.map(u=>`<div class="between" style="padding:8px 0;border-bottom:1px solid var(--border-soft);"><span>${esc(u.nombre)}</span>${tag(u.rol==='propietario'?'Propietario':'Encargado', u.rol==='propietario'?'positive':'info')}</div>`).join("")}</div>
+      <p class="demo-note">La administración de usuarios se habilitará al conectar con Google Apps Script.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:10px;">Tipos de eventos sanitarios</h3>
+      <div class="stack">${TIPOS_EVENTO.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13.5px;">${esc(t)}</div>`).join("")}</div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:10px;">Turnos de ordeño</h3>
+      <div class="stack"><div>Mañana</div><div>Tarde</div><div>Noche</div></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:10px;">Parámetros de alertas</h3>
+      <div class="f"><label>Umbral de diferencia producción/entrega (litros)</label><input type="number" id="umbralInput" value="${STATE.umbralDiferencia}" min="0"></div>
+      <button class="btn btn-acc btn-sm" id="umbralSave">Guardar umbral</button>
+    </div>
+  </div>`;
+}
+
+/* =====================================================================
+   BÚSQUEDA GLOBAL
+===================================================================== */
+function doGlobalSearch(term){
+  const box = q("#searchResults");
+  term = term.trim().toLowerCase();
+  if(!term){ box.classList.remove("show"); box.innerHTML=""; return; }
+  const vRes = VACAS.filter(v=>v.arete.toLowerCase().includes(term)||v.nombre.toLowerCase().includes(term)).slice(0,5);
+  const tRes = TERNEROS.filter(t=>t.arete.toLowerCase().includes(term)||t.nombre.toLowerCase().includes(term)).slice(0,5);
+  let html = "";
+  vRes.forEach(v=> html += `<div class="sr-item" data-goto="#/hato/${v.id}">🐄 ${esc(v.nombre)} <span class="mono muted">${v.arete}</span></div>`);
+  tRes.forEach(t=> html += `<div class="sr-item" data-goto="#/ternero/${t.id}">🐮 ${esc(t.nombre)} <span class="mono muted">${t.arete}</span></div>`);
+  box.innerHTML = html || `<div class="sr-empty">Sin resultados para "${esc(term)}"</div>`;
+  box.classList.add("show");
+}
+
+/* =====================================================================
+   EVENTOS POR PÁGINA
+===================================================================== */
+function bindPageEvents(path, params){
+  // clicks genéricos de navegación / acciones
+  q("#content").onclick = function(e){
+    const goto = e.target.closest("[data-goto]");
+    if(goto){ navigate(goto.getAttribute("data-goto")); return; }
+    const editV = e.target.closest("[data-edit-vaca]");
+    if(editV){ vacaFormModal(vacaById(editV.getAttribute("data-edit-vaca"))); return; }
+    const delV = e.target.closest("[data-del-vaca]");
+    if(delV){ const id=delV.getAttribute("data-del-vaca"); const v=vacaById(id);
+      confirmDialog(`Esto eliminará el registro de la vaca "${v.nombre}" (${v.arete}).`, ()=>{ eliminarVaca(id); toast("Registro eliminado."); if(path.startsWith("#/hato/")) navigate("#/hato"); else render(); }); return; }
+    const openVForm = e.target.closest("[data-open-vaca-form]");
+    if(openVForm){ vacaFormModal(); return; }
+    const delP = e.target.closest("[data-del-prod]");
+    if(delP){ confirmDialog("Esto eliminará este registro de producción.", ()=>{ eliminarProduccion(delP.getAttribute("data-del-prod")); toast("Registro eliminado."); render(); }); return; }
+    const delE = e.target.closest("[data-del-pil]");
+    if(delE){ confirmDialog("Esto eliminará este registro de entrega a PIL.", ()=>{ eliminarEntregaPIL(delE.getAttribute("data-del-pil")); toast("Registro eliminado."); render(); }); return; }
+    const delS = e.target.closest("[data-del-san]");
+    if(delS){ confirmDialog("Esto eliminará este evento sanitario.", ()=>{ eliminarEventoSanitario(delS.getAttribute("data-del-san")); toast("Registro eliminado."); render(); }); return; }
+    const openTForm = e.target.closest("[data-open-ternero-form]");
+    if(openTForm){ terneroFormModal(); return; }
+    const editT = e.target.closest("[data-edit-ternero]");
+    if(editT){ terneroFormModal(terneroById(editT.getAttribute("data-edit-ternero"))); return; }
+    const delT = e.target.closest("[data-del-ternero]");
+    if(delT){ const id=delT.getAttribute("data-del-ternero"); const t=terneroById(id);
+      confirmDialog(`Esto eliminará el registro del ternero "${t.nombre}" (${t.arete}).`, ()=>{ eliminarTernero(id); toast("Registro eliminado."); if(path.startsWith("#/ternero/")) navigate("#/terneraje"); else render(); }); return; }
+    const openPesaje = e.target.closest("[data-open-pesaje]");
+    if(openPesaje){ pesajeModal(openPesaje.getAttribute("data-open-pesaje")); return; }
+    const ft = e.target.closest("[data-ficha-tab]");
+    if(ft){ fichaTab = ft.getAttribute("data-ficha-tab"); render(); return; }
+    const rt = e.target.closest("[data-reporte-tab]");
+    if(rt){ reporteTab = rt.getAttribute("data-reporte-tab"); render(); return; }
+    const al = e.target.closest("[data-goto]");
+  };
+
+  // -------- HATO lista: filtros --------
+  if(path==="#/hato"){
+    const apply = ()=>{
+      const p = new URLSearchParams();
+      const s=q("#fHatoSearch").value.trim(); if(s) p.set("q",s);
+      const fp=q("#fHatoProd").value; if(fp) p.set("estado",fp);
+      const fr=q("#fHatoRepro").value; if(fr) p.set("repro",fr);
+      const fs=q("#fHatoSan").value; if(fs) p.set("sanitario",fs);
+      navigate("#/hato" + (p.toString()?"?"+p.toString():""));
+    };
+    q("#fHatoSearch").addEventListener("input", debounce(apply,350));
+    q("#fHatoProd").onchange = apply; q("#fHatoRepro").onchange = apply; q("#fHatoSan").onchange = apply;
+  }
+  if(path==="#/produccion/historial"){
+    const apply = ()=>{ const p=new URLSearchParams();
+      if(q("#fProdVaca").value) p.set("vaca",q("#fProdVaca").value);
+      if(q("#fProdFecha").value) p.set("fecha",q("#fProdFecha").value);
+      if(q("#fProdTurno").value) p.set("turno",q("#fProdTurno").value);
+      navigate("#/produccion/historial"+(p.toString()?"?"+p.toString():"")); };
+    q("#fProdVaca").onchange=apply; q("#fProdFecha").onchange=apply; q("#fProdTurno").onchange=apply;
+  }
+  if(path==="#/sanidad/historial"){
+    const apply = ()=>{ const p=new URLSearchParams();
+      if(q("#fSanTipo").value) p.set("tipo",q("#fSanTipo").value);
+      if(q("#fSanEstado").value) p.set("estado",q("#fSanEstado").value);
+      if(q("#fSanFecha").value) p.set("fecha",q("#fSanFecha").value);
+      navigate("#/sanidad/historial"+(p.toString()?"?"+p.toString():"")); };
+    q("#fSanTipo").onchange=apply; q("#fSanEstado").onchange=apply; q("#fSanFecha").onchange=apply;
+  }
+  if(path==="#/terneraje"){
+    const apply = ()=>{ const p=new URLSearchParams();
+      const s=q("#fTerSearch").value.trim(); if(s) p.set("q",s);
+      if(q("#fTerEstado").value) p.set("estado",q("#fTerEstado").value);
+      navigate("#/terneraje"+(p.toString()?"?"+p.toString():"")); };
+    q("#fTerSearch").addEventListener("input", debounce(apply,350));
+    q("#fTerEstado").onchange = apply;
+  }
+
+  // -------- FORMULARIO PRODUCCIÓN --------
+  if(path==="#/produccion"){
+    q("#prodForm").onsubmit = function(e){
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const vacaId = fd.get("vacaId"), litros = parseFloat(fd.get("litros"));
+      let ok = true;
+      ok = validateField(q("#f_pvaca"), !!vacaId, "Selecciona una vaca.") && ok;
+      ok = validateField(q("#f_plitros"), !isNaN(litros) && litros>=0, "Ingresa una cantidad válida de litros (no negativa).") && ok;
+      if(!ok) return;
+      guardarProduccion({fecha:fd.get("fecha"), vacaId, turno:fd.get("turno"), litros, registradoPor:fd.get("registradoPor"), observaciones:fd.get("observaciones").trim()});
+      toast("Registro guardado correctamente.", {again:()=>{ render(); }, view:()=>navigate("#/produccion/historial")});
+      e.target.reset(); q("[name=fecha]",e.target).value = todayStr(); q("[name=registradoPor]",e.target).value = STATE.user.nombre;
+    };
+  }
+
+  // -------- PIL --------
+  if(path==="#/pil"){
+    const litrosEl = q("[name=litros]", q("#pilForm"));
+    const precioEl = q("[name=precioLitro]", q("#pilForm"));
+    const preview = ()=>{ const l=parseFloat(litrosEl.value)||0, p=parseFloat(precioEl.value)||0; q("#pilMontoPreview").value = numBs(+(l*p).toFixed(2)); };
+    litrosEl.addEventListener("input", preview); precioEl.addEventListener("input", preview); preview();
+    q("#pilForm").onsubmit = function(e){
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const litros = parseFloat(fd.get("litros")), precio = parseFloat(fd.get("precioLitro"));
+      let ok = true;
+      ok = validateField(q("#f_pillitros"), !isNaN(litros) && litros>=0, "Ingresa una cantidad válida (no negativa).") && ok;
+      ok = validateField(q("#f_pilprecio"), !isNaN(precio) && precio>=0, "Ingresa un precio válido (no negativo).") && ok;
+      if(!ok) return;
+      guardarEntregaPIL({fecha:fd.get("fecha"), hora:fd.get("hora"), litros, precioLitro:precio, monto:+(litros*precio).toFixed(2),
+        comprobante:fd.get("comprobante").trim(), registradoPor:fd.get("registradoPor"), observaciones:fd.get("observaciones").trim()});
+      toast("Entrega registrada correctamente.", {view:()=>render()});
+      render();
+    };
+  }
+
+  // -------- SANIDAD form --------
+  if(path==="#/sanidad"){
+    const refreshAnimales = ()=>{
+      const tipo = q("#sanAnimalTipo").value;
+      const sel = q("#sanAnimalId");
+      sel.innerHTML = `<option value="">Seleccionar...</option>` + (tipo==="vaca" ? VACAS.map(v=>`<option value="${v.id}">${v.arete} — ${v.nombre}</option>`).join("") : TERNEROS.map(t=>`<option value="${t.id}">${t.arete} — ${t.nombre}</option>`).join(""));
+    };
+    const refreshDynamic = ()=>{ q("#sanDynamicFields").innerHTML = sanDynamicHTML(q("#sanTipo").value); };
+    refreshAnimales(); refreshDynamic();
+    q("#sanAnimalTipo").onchange = refreshAnimales;
+    q("#sanTipo").onchange = refreshDynamic;
+    q("#sanForm").onsubmit = function(e){
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const animalId = fd.get("animalId");
+      if(!validateField(q("#f_sananimal"), !!animalId, "Selecciona un animal.")) return;
+      const data = {animalTipo:fd.get("animalTipo"), animalId, tipo:fd.get("tipo"),
+        descripcion:(fd.get("descripcion")||"").trim(), producto:(fd.get("producto")||"").trim(), tratamiento:(fd.get("tratamiento")||"").trim(),
+        fechaInicio:fd.get("fechaInicio")||fd.get("fecha")||todayStr(), fechaFin:fd.get("fechaFin")||"", fecha:fd.get("fecha")||fd.get("fechaInicio")||todayStr(),
+        fechaDiagnostico:fd.get("fechaDiagnostico")||"", tipoLesion:fd.get("tipoLesion")||"", ubicacion:fd.get("ubicacion")||"",
+        responsable:fd.get("responsable"), costo:parseFloat(fd.get("costo"))||0, estado:fd.get("estado"), observaciones:(fd.get("observaciones")||"").trim()};
+      guardarEventoSanitario(data);
+      // sincronizar estado sanitario en la vaca si corresponde
+      if(data.animalTipo==="vaca" && data.estado==="activo"){
+        if(data.tipo==="Tratamiento de mastitis") actualizarVaca(animalId, {estadoSanitario:"mastitis"});
+        else if(data.tipo==="Lesión física") actualizarVaca(animalId, {estadoSanitario:"lesion"});
+        else actualizarVaca(animalId, {estadoSanitario:"tratamiento"});
+      }
+      toast("Evento sanitario guardado correctamente.", {again:()=>render(), view:()=>navigate("#/sanidad/historial")});
+      e.target.reset(); refreshAnimales(); refreshDynamic();
+    };
+  }
+
+  // -------- CONFIGURACIÓN --------
+  if(path==="#/configuracion"){
+    q("#umbralSave").onclick = function(){
+      const v = parseInt(q("#umbralInput").value,10);
+      STATE.umbralDiferencia = isNaN(v)?STATE.umbralDiferencia:v;
+      toast("Parámetros de alerta actualizados.");
+    };
+  }
+
+  // -------- FICHA VACA quick repro update --------
+  if(path.startsWith("#/hato/") && q("#reproSaveBtn")){
+    q("#reproSaveBtn").onclick = function(){
+      const id = path.split("/")[2];
+      actualizarVaca(id, {estadoReproductivo: q("#reproQuick").value});
+      toast("Estado reproductivo actualizado.");
+      render();
+    };
+  }
+}
+
+function debounce(fn, ms){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+/* =====================================================================
+   INIT
+===================================================================== */
+function populateUserSelect(role){
+  const sel = q("#userSelect");
+  sel.innerHTML = USUARIOS.filter(u=>u.rol===role).map(u=>`<option value="${u.id}">${u.nombre}</option>`).join("");
+}
+populateUserSelect("propietario");
+qa(".role-opt", q("#rolePicker")).forEach(opt=>{
+  opt.onclick = function(){
+    qa(".role-opt", q("#rolePicker")).forEach(o=>o.classList.remove("active"));
+    opt.classList.add("active");
+    populateUserSelect(opt.getAttribute("data-role"));
+  };
+});
+q("#loginBtn").onclick = function(){
+  const role = q(".role-opt.active", q("#rolePicker")).getAttribute("data-role");
+  const userId = q("#userSelect").value;
+  STATE.role = role;
+  STATE.user = USUARIOS.find(u=>u.id===userId) || USUARIOS.find(u=>u.rol===role);
+  q("#screen-login").style.display = "none";
+  q("#app").classList.add("on");
+  location.hash = "#/dashboard";
+  render();
+};
+
+q("#hamburgerBtn").onclick = openDrawer;
+q("#drawerBg").onclick = closeDrawer;
+q("#bellBtn").onclick = function(){
+  const alerts = computeAlerts();
+  const root = q("#modalRoot");
+  openModal(`<div class="modal-head"><h3>Alertas</h3><button class="modal-close" data-close-m>✕</button></div>
+    <div class="modal-body">${alerts.length? alerts.map(a=>`<div class="alert-item" data-goto="${a.go}" data-close-alert><span class="dot ${a.level}"></span><span class="txt">${a.text}</span><span class="cnt">${a.count}</span></div>`).join("") : `<div class="empty-alerts">Sin alertas activas por el momento.</div>`}</div>`);
+  qa("[data-close-m]", root).forEach(b=>b.onclick=closeModal);
+  qa("[data-goto]", root).forEach(b=> b.onclick = ()=>{ closeModal(); navigate(b.getAttribute("data-goto")); });
+};
+q("#globalSearch").addEventListener("input", debounce(e=>doGlobalSearch(e.target.value), 200));
+q("#searchResults").onclick = function(e){
+  const item = e.target.closest("[data-goto]");
+  if(item){ navigate(item.getAttribute("data-goto")); q("#globalSearch").value=""; q("#searchResults").classList.remove("show"); }
+};
+document.addEventListener("click", function(e){
+  if(!e.target.closest(".searchbar") && !e.target.closest("#searchResults")) q("#searchResults").classList.remove("show");
+});
+
+})();
+</script>
+</body>
+</html>
