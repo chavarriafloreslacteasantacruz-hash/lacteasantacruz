@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Láctea Santa Cruz</title>
+<title>Control Lechero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -619,13 +619,41 @@ let PESAJES_TERNEROS = [];
 })();
 
 // ---- Funciones "API" reemplazables por fetch() a Google Apps Script ----
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwh-2W_lksT8X_ayIM_eqGosh-2KzWwEn36aGiVR7G7v99_5_CcVh4k19lhX_gQJAWiQA/exec";
+
+function enviarASheets(tipo, encabezados, fila){
+  fetch(URL_APPS_SCRIPT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify({
+      tipo,
+      encabezados,
+      fila
+    })
+  }).catch(err =>
+    console.error("No se pudo sincronizar con Sheets:", err)
+  );
+}  
 function getVacas(){ return VACAS; }
 function guardarVaca(v){ v.id = nextId("V"); VACAS.push(v); return v; }
 function actualizarVaca(id, patch){ const v = VACAS.find(x=>x.id===id); Object.assign(v, patch); return v; }
 function eliminarVaca(id){ VACAS = VACAS.filter(v=>v.id!==id); }
 
 function getProduccion(){ return PRODUCCION; }
-function guardarProduccion(p){ p.id = nextId("P"); PRODUCCION.push(p); return p; }
+function guardarProduccion(p){
+  p.id = nextId("P");
+  PRODUCCION.push(p);
+
+  enviarASheets(
+    "Produccion",
+    ["id","fecha","vacaId","turno","litros","registradoPor","observaciones"],
+    [p.id, p.fecha, p.vacaId, p.turno, p.litros, p.registradoPor, p.observaciones]
+  );
+
+  return p;
+}
 function eliminarProduccion(id){ PRODUCCION = PRODUCCION.filter(p=>p.id!==id); }
 
 function getEntregasPIL(){ return ENTREGAS_PIL; }
