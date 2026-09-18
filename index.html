@@ -637,7 +637,14 @@ function enviarASheets(tipo, encabezados, fila){
   );
 }  
 function getVacas(){ return VACAS; }
-function guardarVaca(v){ v.id = nextId("V"); VACAS.push(v); return v; }
+function guardarVaca(v){
+  v.id = nextId("V"); VACAS.push(v);
+  enviarASheets("Vacas",
+    ["id","arete","nombre","raza","fechaNacimiento","fechaIngreso","estadoProductivo","estadoReproductivo","estadoSanitario","observaciones"],
+    [v.id, v.arete, v.nombre, v.raza, v.fechaNacimiento, v.fechaIngreso, v.estadoProductivo, v.estadoReproductivo, v.estadoSanitario, v.observaciones]
+  );
+  return v;
+}
 function actualizarVaca(id, patch){ const v = VACAS.find(x=>x.id===id); Object.assign(v, patch); return v; }
 function eliminarVaca(id){ VACAS = VACAS.filter(v=>v.id!==id); }
 
@@ -657,15 +664,36 @@ function guardarProduccion(p){
 function eliminarProduccion(id){ PRODUCCION = PRODUCCION.filter(p=>p.id!==id); }
 
 function getEntregasPIL(){ return ENTREGAS_PIL; }
-function guardarEntregaPIL(e){ e.id = nextId("E"); ENTREGAS_PIL.push(e); return e; }
+function guardarEntregaPIL(e){
+  e.id = nextId("E"); ENTREGAS_PIL.push(e);
+  enviarASheets("EntregasPIL",
+    ["id","fecha","hora","litros","precioLitro","monto","comprobante","registradoPor","observaciones"],
+    [e.id, e.fecha, e.hora, e.litros, e.precioLitro, e.monto, e.comprobante, e.registradoPor, e.observaciones]
+  );
+  return e;
+}
 function eliminarEntregaPIL(id){ ENTREGAS_PIL = ENTREGAS_PIL.filter(e=>e.id!==id); }
 
 function getEventosSanitarios(){ return EVENTOS_SANITARIOS; }
-function guardarEventoSanitario(ev){ ev.id = nextId("S"); EVENTOS_SANITARIOS.push(ev); return ev; }
+function guardarEventoSanitario(ev){
+  ev.id = nextId("S"); EVENTOS_SANITARIOS.push(ev);
+  enviarASheets("Sanidad",
+    ["id","animalTipo","animalId","tipo","descripcion","responsable","costo","estado","observaciones"],
+    [ev.id, ev.animalTipo, ev.animalId, ev.tipo, ev.descripcion||"", ev.responsable||"", ev.costo||"", ev.estado||"", ev.observaciones||""]
+  );
+  return ev;
+}
 function eliminarEventoSanitario(id){ EVENTOS_SANITARIOS = EVENTOS_SANITARIOS.filter(e=>e.id!==id); }
 
 function getTerneros(){ return TERNEROS; }
-function guardarTernero(t){ t.id = nextId("T"); TERNEROS.push(t); return t; }
+function guardarTernero(t){
+  t.id = nextId("T"); TERNEROS.push(t);
+  enviarASheets("Terneros",
+    ["id","arete","nombre","sexo","fechaNacimiento","madreId","padre","pesoNacimiento","pesoActual","estadoSalud","estado","observaciones"],
+    [t.id, t.arete, t.nombre, t.sexo, t.fechaNacimiento, t.madreId, t.padre||"", t.pesoNacimiento, t.pesoActual, t.estadoSalud, t.estado, t.observaciones]
+  );
+  return t;
+}
 function actualizarTernero(id, patch){ const t = TERNEROS.find(x=>x.id===id); Object.assign(t, patch); return t; }
 function eliminarTernero(id){ TERNEROS = TERNEROS.filter(t=>t.id!==id); }
 
@@ -682,6 +710,7 @@ const STATE = {
   user: null, role: "propietario",
   route: "#/dashboard",
   umbralDiferencia: 30, // litros, configurable
+  costoPorLitro: 1.2, // Bs, costo estimado de producción (alimentación + mano de obra), configurable
 };
 
 /* =====================================================================
@@ -999,6 +1028,9 @@ function viewDashboard(){
   const entregaHoy = ENTREGAS_PIL.find(e=>e.fecha===hoy);
   const litrosPIL = entregaHoy ? entregaHoy.litros : 0;
   const diferencia = prodHoy - litrosPIL;
+const consumo = entregaHoy?.consumoInterno || 0;
+const descarte = entregaHoy?.descarte || 0;
+const noExplicado = +(diferencia - consumo - descarte).toFixed(1);
   const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion");
   const promedio = enProd.length ? prodHoy/enProd.length : 0;
 
@@ -1010,7 +1042,7 @@ function viewDashboard(){
   const totalVacas = VACAS.length;
   const secado = VACAS.filter(v=>v.estadoProductivo==="secado").length;
   const mastitis = VACAS.filter(v=>v.estadoSanitario==="mastitis").length;
-  const descarte = VACAS.filter(v=>v.estadoProductivo==="descarte").length;
+  const vacasDescarte = VACAS.filter(v=>v.estadoProductivo==="descarte").length;
   const prenadas = VACAS.filter(v=>v.estadoReproductivo==="preñada").length;
   const noPrenadas = totalVacas - prenadas;
   const totalTerneros = TERNEROS.length;
@@ -1020,12 +1052,15 @@ function viewDashboard(){
   const noDataToday = PRODUCCION.filter(p=>p.fecha===hoy).length === 0;
 
   return `
-  <div class="page-head">
+    <div class="page-head">
     <div><h1>Dashboard</h1><p class="sub">Resumen del día — ${fmtFecha(hoy)}</p></div>
-    <span class="tag warning">📌 Datos de demostración</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-sm" id="btnEjemploGuiado">💡 ¿Cómo interpretar esto?</button>
+      <span class="tag warning">📌 Datos de demostración</span>
+    </div>
   </div>
 
-  <div class="grid grid-4">
+    <div class="grid grid-4">
     <div class="card kpi">
       <div class="lbl">Producción de hoy</div>
       <div class="val">${noDataToday ? '<small>Sin datos registrados</small>' : numLitros(prodHoy)}</div>
@@ -1043,8 +1078,8 @@ function viewDashboard(){
     </div>
     <div class="card kpi">
       <div class="lbl">Diferencia</div>
-      <div class="val" style="color:${Math.abs(diferencia)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(diferencia)}</div>
-      <div class="delta ${diferencia>STATE.umbralDiferencia?'down':'flat'}">${Math.abs(diferencia)>STATE.umbralDiferencia? 'Supera el umbral configurado' : 'Dentro de lo esperado'}</div>
+      <div class="val" style="color:${Math.abs(noExplicado)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(diferencia)}</div>
+      <div class="delta ${Math.abs(noExplicado)>STATE.umbralDiferencia?'down':'flat'}">${Math.abs(noExplicado)>STATE.umbralDiferencia? `Alerta: lo no explicado (${numLitros(noExplicado)}) supera ${STATE.umbralDiferencia} L` : `Consumo ${numLitros(consumo)} · Descarte ${numLitros(descarte)} · No explicado ${numLitros(noExplicado)}`}</div>
     </div>
   </div>
 
@@ -1057,7 +1092,17 @@ function viewDashboard(){
       <div class="flow-arrow">→</div>
       <div class="flow-step diff"><div class="n">${numLitros(diferencia)}</div><div class="l">Diferencia</div></div>
     </div>
-    <div class="demo-note">Datos de demostración — se actualizarán automáticamente al conectar con Google Sheets.</div>
+       <div class="demo-note">Datos de demostración — se actualizarán automáticamente al conectar con Google Sheets.</div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Margen estimado del día</div>
+    <div class="grid grid-3">
+      <div class="kpi"><div class="lbl">Ingreso</div><div class="val">${entregaHoy ? numBs(entregaHoy.monto) : '<small>Sin registro</small>'}</div><div class="delta flat">${numLitros(litrosPIL)} × ${numBs(entregaHoy?.precioLitro||0)}</div></div>
+      <div class="kpi"><div class="lbl">Costo estimado</div><div class="val">${numBs(+(prodHoy*STATE.costoPorLitro).toFixed(2))}</div><div class="delta flat">${numLitros(prodHoy)} × ${numBs(STATE.costoPorLitro)}</div></div>
+      <div class="kpi"><div class="lbl">Margen estimado</div><div class="val" style="color:${(entregaHoy?entregaHoy.monto:0)-(prodHoy*STATE.costoPorLitro)<0?'var(--danger)':'var(--positive)'}">${numBs(+((entregaHoy?entregaHoy.monto:0)-(prodHoy*STATE.costoPorLitro)).toFixed(2))}</div><div class="delta flat">Ingreso − Costo estimado</div></div>
+    </div>
+    <div class="demo-note">Fórmula: Margen = (litros entregados × precio/L) − (litros producidos × costo estimado/L). Supuesto de costo configurable en Configuración → Parámetros de alertas.</div>
   </div>
 
   <div class="sec-title"><h2>Indicadores del hato</h2></div>
@@ -1065,7 +1110,7 @@ function viewDashboard(){
     <div class="card kpi"><div class="lbl">Total de vacas</div><div class="val">${totalVacas}</div></div>
     <div class="card kpi"><div class="lbl">En secado</div><div class="val">${secado}</div></div>
     <div class="card kpi"><div class="lbl">Con mastitis</div><div class="val" style="color:${mastitis?'var(--danger)':'var(--ink)'}">${mastitis}</div></div>
-    <div class="card kpi"><div class="lbl">Para descarte</div><div class="val">${descarte}</div></div>
+    <div class="card kpi"><div class="lbl">Para descarte</div><div class="val">${vacasDescarte}</div></div>
     <div class="card kpi"><div class="lbl">Preñadas</div><div class="val">${prenadas}</div></div>
     <div class="card kpi"><div class="lbl">No preñadas</div><div class="val">${noPrenadas}</div></div>
     <div class="card kpi"><div class="lbl">Total terneros</div><div class="val">${totalTerneros}</div></div>
@@ -1085,13 +1130,13 @@ function viewDashboard(){
           {label:"En producción", value:enProd.length, color:"var(--positive)"},
           {label:"Secado", value:secado, color:"var(--info)"},
           {label:"Mastitis", value:mastitis, color:"var(--danger)"},
-          {label:"Descarte", value:descarte, color:"var(--warning)"},
+         {label:"Descarte", value:vacasDescarte, color:"var(--warning)"},
         ])}
         <div class="legend" style="flex-direction:column;gap:7px;">
           <span><i style="background:var(--positive)"></i>En producción (${enProd.length})</span>
           <span><i style="background:var(--info)"></i>Secado (${secado})</span>
           <span><i style="background:var(--danger)"></i>Mastitis (${mastitis})</span>
-          <span><i style="background:var(--warning)"></i>Descarte (${descarte})</span>
+          <span><i style="background:var(--warning)"></i>Descarte (${vacasDescarte})</span>
         </div>
       </div>
     </div>
@@ -1396,7 +1441,11 @@ function viewPIL(params){
           <div class="f"><label>N° de comprobante</label><input name="comprobante" placeholder="Ej: PIL-58210"></div>
           <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--surface-alt);"></div>
         </div>
-        <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
+        <div class="form-row">
+  <div class="f"><label>Consumo interno (L)</label><input type="number" step="0.1" min="0" name="consumoInterno" value="0"></div>
+  <div class="f"><label>Descarte / mermas (L)</label><input type="number" step="0.1" min="0" name="descarte" value="0"></div>
+</div>
+<div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
         <button type="submit" class="btn btn-acc" style="width:100%;">Guardar entrega</button>
       </form>
     </div>
@@ -1725,7 +1774,10 @@ function viewConfiguracion(){
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:10px;">Parámetros de alertas</h3>
       <div class="f"><label>Umbral de diferencia producción/entrega (litros)</label><input type="number" id="umbralInput" value="${STATE.umbralDiferencia}" min="0"></div>
-      <button class="btn btn-acc btn-sm" id="umbralSave">Guardar umbral</button>
+       <button class="btn btn-acc btn-sm" id="umbralSave">Guardar umbral</button>
+      <div class="hr"></div>
+      <div class="f"><label>Costo estimado por litro producido (Bs)</label><input type="number" step="0.01" id="costoInput" value="${STATE.costoPorLitro}" min="0"></div>
+      <button class="btn btn-acc btn-sm" id="costoSave">Guardar costo</button>
     </div>
   </div>`;
 }
@@ -1750,6 +1802,30 @@ function doGlobalSearch(term){
    EVENTOS POR PÁGINA
 ===================================================================== */
 function bindPageEvents(path, params){
+    if(path==="#/dashboard" && q("#btnEjemploGuiado")){
+    q("#btnEjemploGuiado").onclick = function(){
+      const hoy = todayStr();
+      const prodHoy = PRODUCCION.filter(p=>p.fecha===hoy).reduce((s,p)=>s+p.litros,0);
+      const entregaHoy = ENTREGAS_PIL.find(e=>e.fecha===hoy);
+      const litrosPIL = entregaHoy ? entregaHoy.litros : 0;
+      const diferencia = prodHoy - litrosPIL;
+      const consumo = entregaHoy?.consumoInterno || 0;
+      const descarte = entregaHoy?.descarte || 0;
+      const noExplicado = +(diferencia - consumo - descarte).toFixed(1);
+      const root = q("#modalRoot");
+      openModal(`<div class="modal-head"><h3>Ejemplo: cómo leer el dashboard</h3><button class="modal-close" data-close-m>✕</button></div>
+        <div class="modal-body">
+          <p style="margin-bottom:10px;">Hoy se produjeron <b>${numLitros(prodHoy)}</b> y se entregaron <b>${numLitros(litrosPIL)}</b> a PIL.</p>
+          <p style="margin-bottom:10px;">La diferencia de <b>${numLitros(diferencia)}</b> se explica por <b>${numLitros(consumo)}</b> de consumo interno y <b>${numLitros(descarte)}</b> de descarte, quedando <b>${numLitros(noExplicado)}</b> sin explicar.</p>
+          <p style="margin-bottom:10px;">${Math.abs(noExplicado)>STATE.umbralDiferencia
+            ? `Como lo no explicado supera el umbral de ${STATE.umbralDiferencia} L, el sistema recomienda: revisar el registro de ordeño de hoy turno por turno, y verificar si hubo un error de medición o una pérdida real.`
+            : `Como lo no explicado está dentro del umbral de ${STATE.umbralDiferencia} L, no se requiere una acción inmediata: es una variación normal.`}</p>
+          <p>Con el margen estimado del día, el productor puede ver de un vistazo si, además del volumen, el negocio sigue siendo rentable con el precio y costo actuales.</p>
+        </div>
+        <div class="modal-foot"><button class="btn" data-close-m>Cerrar</button></div>`);
+      qa("[data-close-m]", root).forEach(b=>b.onclick=closeModal);
+    };
+  }
   // clicks genéricos de navegación / acciones
   q("#content").onclick = function(e){
     const goto = e.target.closest("[data-goto]");
@@ -1851,7 +1927,8 @@ function bindPageEvents(path, params){
       ok = validateField(q("#f_pillitros"), !isNaN(litros) && litros>=0, "Ingresa una cantidad válida (no negativa).") && ok;
       ok = validateField(q("#f_pilprecio"), !isNaN(precio) && precio>=0, "Ingresa un precio válido (no negativo).") && ok;
       if(!ok) return;
-      guardarEntregaPIL({fecha:fd.get("fecha"), hora:fd.get("hora"), litros, precioLitro:precio, monto:+(litros*precio).toFixed(2),
+guardarEntregaPIL({fecha:fd.get("fecha"), hora:fd.get("hora"), litros, precioLitro:precio, monto:+(litros*precio).toFixed(2),
+        consumoInterno: parseFloat(fd.get("consumoInterno"))||0, descarte: parseFloat(fd.get("descarte"))||0,
         comprobante:fd.get("comprobante").trim(), registradoPor:fd.get("registradoPor"), observaciones:fd.get("observaciones").trim()});
       toast("Entrega registrada correctamente.", {view:()=>render()});
       render();
@@ -1893,10 +1970,15 @@ function bindPageEvents(path, params){
 
   // -------- CONFIGURACIÓN --------
   if(path==="#/configuracion"){
-    q("#umbralSave").onclick = function(){
+      q("#umbralSave").onclick = function(){
       const v = parseInt(q("#umbralInput").value,10);
       STATE.umbralDiferencia = isNaN(v)?STATE.umbralDiferencia:v;
       toast("Parámetros de alerta actualizados.");
+    };
+    q("#costoSave").onclick = function(){
+      const v = parseFloat(q("#costoInput").value);
+      STATE.costoPorLitro = isNaN(v)?STATE.costoPorLitro:v;
+      toast("Costo estimado actualizado.");
     };
   }
 
