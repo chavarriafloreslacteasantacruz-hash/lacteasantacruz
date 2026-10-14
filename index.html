@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#050C08">
 <title>Control Lechero</title>
 <meta name="description" content="Gestión digital del hato lechero: producción, entregas a PIL, sanidad y terneraje.">
-<!-- Vista previa al compartir (WhatsApp, Facebook, Telegram, etc.) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Control Lechero">
 <meta property="og:title" content="Control Lechero — Gestión digital del hato">
@@ -52,11 +51,11 @@ a{color:inherit;}
 ::selection{background:var(--accent);color:var(--on-accent);}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 ::-webkit-scrollbar{width:9px;height:9px;}::-webkit-scrollbar-thumb{background:#1D4B33;border-radius:9px;}::-webkit-scrollbar-track{background:transparent;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
 .eartag{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:12.5px;font-weight:600;background:var(--surface-alt);color:var(--accent);border:1px solid var(--border);padding:3px 9px 3px 6px;border-radius:5px 5px 5px 5px / 8px 8px 5px 5px;white-space:nowrap;}
 .eartag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--bg);border:1px solid var(--accent);flex:none;}
 
-/* ===== BANNER ===== */
 .banner{position:relative;width:100%;height:150px;overflow:hidden;background:linear-gradient(120deg,#07150D 0%,#0E2C1B 55%,#0A1F14 100%);border-bottom:1px solid var(--border);}
 .banner img{width:100%;height:100%;object-fit:cover;display:block;}
 .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(5,12,8,.75));pointer-events:none;}
@@ -68,7 +67,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .banner.noimg img{display:none;}
 @media(max-width:980px){.banner{height:110px;}}
 
-/* ===== LOGIN ===== */
 #screen-login{min-height:100vh;display:flex;flex-direction:column;align-items:center;background:radial-gradient(700px 360px at 15% 0%,rgba(57,255,136,.14),transparent 60%),var(--bg);}
 #screen-login .banner{border-bottom:1px solid var(--border);}
 .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:24px;}
@@ -86,13 +84,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .role-opt{border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 10px;text-align:center;background:var(--surface-alt);transition:.15s;cursor:pointer;}
 .role-opt.active{border-color:var(--accent);background:var(--accent-bg);box-shadow:var(--glow);}
 .role-opt .ic{font-size:20px;display:block;margin-bottom:4px;}
-.role-opt .lbl{font-weight:700;font-size:13.5px;}
-.role-opt .sub{font-size:11px;color:var(--ink-faint);}
+.role-opt .lbl{display:block;font-weight:700;font-size:13.5px;margin-bottom:2px;}
+.role-opt .sub{display:block;font-size:11px;color:var(--ink-faint);line-height:1.2;}
 .btn-primary{width:100%;padding:12px;background:var(--accent);color:var(--on-accent);border:none;border-radius:var(--radius-sm);font-weight:800;font-size:14.5px;box-shadow:0 0 18px rgba(57,255,136,.35);}
 .btn-primary:hover{background:#6BFFA6;}
 .btn-primary[disabled]{opacity:.6;cursor:wait;}
 
-/* ===== SHELL ===== */
 #app{display:none;}#app.on{display:block;}
 .shell{display:flex;min-height:100vh;}
 .sidebar{width:var(--sidebar-w);flex:none;background:linear-gradient(180deg,#07130C 0%,#050C08 100%);color:var(--ink-soft);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;padding:18px 12px;z-index:40;border-right:1px solid var(--border);overflow-y:auto;}
@@ -159,7 +156,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .grid{display:grid;gap:14px;}
 .grid-4{grid-template-columns:repeat(4,1fr);}
 .grid-3{grid-template-columns:repeat(3,1fr);}
-.grid-2{grid-template-columns:1fr 1fr;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
 @media(max-width:980px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
@@ -197,6 +194,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .filters select,.filters input{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:12.5px;color:var(--ink);}
 .filters .fsearch{position:relative;flex:1;min-width:160px;}
 .filters .fsearch input{width:100%;}
+.filters .fdate{display:flex;flex-direction:column;gap:3px;}
+.filters .fdate span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700;}
+.month-picker{display:flex;flex-direction:column;gap:3px;}
+.month-picker span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700;}
+.month-picker input{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:12.5px;color:var(--ink);}
 .filter-reset{font-size:12px;color:var(--accent);text-decoration:underline;background:none;border:none;padding:6px;}
 
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;}
@@ -212,6 +214,7 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
 .mono{font-family:var(--font-mono);}
 .tright{text-align:right;}
 .empty-row td{text-align:center;color:var(--ink-faint);padding:34px;font-size:13px;}
+.horaReg{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);white-space:nowrap;}
 
 .modal-bg{position:fixed;inset:0;background:rgba(0,4,2,.72);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:560px;width:100%;max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg),0 0 30px rgba(57,255,136,.1);}
@@ -237,8 +240,12 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
 @media(min-width:981px){.toast{left:calc(50% + var(--sidebar-w)/2);}}
 @media(max-width:980px){.toast{bottom:88px;}}
 .toast.hide{opacity:0;transform:translateX(-50%) translateY(12px);pointer-events:none;}
-.toast .tt{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;margin-bottom:10px;}
+.toast.error{border-color:var(--danger);box-shadow:var(--shadow-lg),0 0 22px rgba(255,92,122,.35);}
+.toast.info{border-color:var(--warning);box-shadow:var(--shadow-lg),0 0 22px rgba(255,210,63,.3);}
+.toast .tt{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;margin-bottom:10px;line-height:1.35;}
 .toast .ic-ok{color:var(--accent);}
+.toast .ic-err{color:var(--danger);}
+.toast .ic-info{color:var(--warning);}
 .toast-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .toast-actions button{background:var(--surface-alt);border:1px solid var(--border);color:var(--ink);font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;}
 .toast-actions button:hover{border-color:var(--accent);color:var(--accent);}
@@ -338,19 +345,21 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
 (function(){
 "use strict";
 
-/* ===== CONFIG ===== */
 const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbykzkfbQD12BBBKHuxwl3HS8pDDhdDq0q873OM5zJFkpRsdxEAHtrI8ZWFvbAPnZ7U-/exec";
-const RAZAS = ["Holstein","Jersey","Pardo Suizo","Gyr Lechero","Criolla"];
+const RAZAS = ["Holstein","Girolando","Pardo Suizo","Gyr Lechero","Criolla"];
 const USUARIOS = [
   {id:"u1", nombre:"Don Ramiro Pérez", rol:"propietario"},
   {id:"u2", nombre:"Juan Mamani", rol:"encargado"},
-  {id:"u3", nombre:"Rosa Quispe", rol:"encargado"},
 ];
 const VETERINARIOS = ["Dr. Álvaro Suárez","Dra. Lucía Rojas","Ing. Marcelo Zambrana"];
 const TIPOS_EVENTO = ["Vacuna contra garrapata","Vitaminización","Tratamiento de mastitis","Lesión física","Otro evento sanitario"];
 
-/* ===== IMÁGENES DEL MENÚ (carpeta /imagenes del repositorio) =====
-   Si el nombre de algún archivo es distinto, cámbialo aquí. Si una imagen no carga, se muestra un emoji de respaldo. */
+/* Mapeo evento sanitario → estado sanitario de la vaca (solo vacas, solo en memoria) */
+const MAPEO_EVENTO_ESTADO = {
+  "Tratamiento de mastitis": "mastitis",
+  "Lesión física": "lesion"
+};
+
 const CARPETA_IMG = "imagenes/";
 const IMAGENES = {
   "#/dashboard":            "principalhero.webp",
@@ -361,19 +370,18 @@ const IMAGENES = {
   "#/sanidad":              "registrarsanidad.webp",
   "#/sanidad/historial":    "registrarsanidad.webp",
   "#/terneraje":            "terneros.jpg"
-  /* Reportes y Configuración no tienen imagen todavía: usan emoji.
-     Cuando las subas, agrega aquí por ejemplo:  "#/reportes": "reportes.jpg",  "#/configuracion": "configuracion.jpg" */
 };
 
 let VACAS=[],PRODUCCION=[],ENTREGAS_PIL=[],EVENTOS_SANITARIOS=[],TERNEROS=[],PESAJES_TERNEROS=[];
-let _id=1000;
-function nextId(p){ _id++; return p+_id; }
+let _id = 0;
+function nextId(p){ _id++; return p + "_" + (globalThis.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g,"") : Date.now().toString(36)+"_"+Math.random().toString(36).slice(2)+"_"+_id); }
 
 function q(s,r){ return (r||document).querySelector(s); }
 function qa(s,r){ return Array.from((r||document).querySelectorAll(s)); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function todayStr(){ return fechaLocal(new Date()); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return fechaLocal(d); }
+function fechaLocal(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function fmtFecha(iso){ if(!iso) return "—"; const [y,m,d]=String(iso).split("-"); if(!y||!m||!d) return iso; return `${d}/${m}/${y}`; }
 function edadDesde(iso){ if(!iso) return "—"; const d=Math.floor((new Date()-new Date(iso))/86400000); if(d<0) return "—"; if(d<30) return d+" días"; if(d<365) return Math.floor(d/30)+" meses"; return Math.floor(d/365)+" a"; }
 function numLitros(n){ return (+n||0).toLocaleString("es-BO",{maximumFractionDigits:1})+" L"; }
@@ -383,13 +391,48 @@ function lblBs(n){ return (Math.round(+n||0)).toLocaleString("es-BO"); }
 function vacaById(id){ return VACAS.find(v=>String(v.id)===String(id)); }
 function terneroById(id){ return TERNEROS.find(t=>String(t.id)===String(id)); }
 
-/* Imagen del menú con respaldo en emoji si el archivo no existe */
+function timestampAhora(){
+  const d = new Date();
+  const f = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const h = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  return f+" "+h;
+}
+
+function etapaTernero(t){
+  if(!t || !t.fechaNacimiento) return {etapa:"Sin fecha", sugerencia:"", urgencia:"neutral"};
+  const meses = Math.floor((new Date() - new Date(t.fechaNacimiento)) / (1000*60*60*24*30.44));
+  if(t.sexo === "Macho"){
+    if(meses < 6)  return {etapa:"Ternero",                  sugerencia:"Lactancia / cría",           urgencia:"info"};
+    if(meses < 18) return {etapa:"Novillo en crecimiento",   sugerencia:"Crecimiento",                urgencia:"info"};
+    if(meses < 24) return {etapa:"Torillo",                  sugerencia:"⭐ Edad óptima de venta",    urgencia:"warning"};
+    return         {etapa:"Toro adulto",                     sugerencia:"Considerar venta",           urgencia:"warning"};
+  } else {
+    if(meses < 2)  return {etapa:"Ternera lactante",         sugerencia:"Lactancia",                  urgencia:"info"};
+    if(meses < 6)  return {etapa:"Ternera destetada",        sugerencia:"Destete",                    urgencia:"info"};
+    if(meses < 15) return {etapa:"Vaquillona",               sugerencia:"Crecimiento",                urgencia:"info"};
+    if(meses < 24) return {etapa:"Vaquillona apta",          sugerencia:"⭐ Apta para servicio",      urgencia:"positive"};
+    return         {etapa:"Vaca joven",                      sugerencia:"En producción",              urgencia:"positive"};
+  }
+}
+
+/* Aplica cambio de estado sanitario en memoria. Solo vacas. Solo si el tipo mapea. */
+function aplicarCambioEstadoPorEvento(ev){
+  if(!ev || ev.animalTipo !== "vaca") return {cambio:false};
+  const nuevoEstado = MAPEO_EVENTO_ESTADO[ev.tipo];
+  if(!nuevoEstado) return {cambio:false};
+  const vaca = vacaById(ev.animalId);
+  if(!vaca) return {cambio:false};
+  const estadoAnterior = vaca.estadoSanitario;
+  if(estadoAnterior === nuevoEstado) return {cambio:false, vaca, estadoAnterior, estadoNuevo:nuevoEstado};
+  vaca.estadoSanitario = nuevoEstado;
+  return {cambio:true, vaca, estadoAnterior, estadoNuevo:nuevoEstado};
+}
+
 function imgMenu(ruta, emoji){
   const f = IMAGENES[ruta];
   if(!f) return esc(emoji);
   return `<img src="${CARPETA_IMG}${esc(f)}" alt="" loading="lazy" data-emoji="${esc(emoji)}">`;
 }
-/* Si falla una imagen: menú → emoji; banner → texto de respaldo */
 document.addEventListener("error",function(e){
   const t=e.target;
   if(!t || t.tagName!=="IMG") return;
@@ -397,7 +440,6 @@ document.addEventListener("error",function(e){
   if(t.dataset && t.dataset.emoji!==undefined){ const p=t.parentNode; if(p) p.textContent=t.dataset.emoji; }
 },true);
 
-/* Banners cuya imagen ya falló antes de registrar el listener */
 qa("img.banner-img").forEach(function(im){
   if(im.complete && im.naturalWidth===0){ const b=im.closest("[data-banner]"); if(b) b.classList.add("noimg"); }
 });
@@ -428,58 +470,67 @@ function tagSan(v){ return tag(ESTADO_SAN_LABEL[v]||v, ESTADO_SAN_TAG[v]||"neutr
 function tagRepro(v){ return v==="preñada" ? tag("Preñada","positive") : tag("No preñada","neutral"); }
 function eartag(t){ return `<span class="eartag">${esc(t)}</span>`; }
 
-/* ===== SHEETS ===== */
-function enviarASheets(tipo, encabezados, fila){
-  fetch(URL_APPS_SCRIPT, {
-    method:"POST",
-    headers:{ "Content-Type":"text/plain;charset=utf-8" },
-    body: JSON.stringify({ tipo, encabezados, fila })
-  })
-  .then(r=>r.json())
-  .then(res=>{ if(res.ok) console.log("✔ "+tipo); else console.error("✘",res.error); })
-  .catch(err=>console.error("Error:",err));
+async function enviarASheets(accion, tipo, encabezados, fila){
+  try{
+    const res = await fetch(URL_APPS_SCRIPT, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify({ accion: accion||"insert", tipo, encabezados, fila, id: String(fila[0]) })
+    });
+    const json = await res.json();
+    if(json && json.ok) return {ok:true, data:json};
+    return {ok:false, error:(json && json.error) || "Respuesta no OK"};
+  }catch(err){
+    return {ok:false, error:String(err)};
+  }
 }
 
 async function cargarDesdeSheets(){
   try{
     const res = await fetch(URL_APPS_SCRIPT + "?t=" + Date.now());
     const json = await res.json();
-    if(!json.ok){ console.warn("GET falló:", json.error); return; }
+    if(!json.ok){ console.warn("GET falló:", json.error); return false; }
     const d = json.data || {};
 
     VACAS = (d.Vacas||[]).map(v=>({
-      id:String(v.id||""),arete:String(v.arete||""),nombre:String(v.nombre||""),raza:String(v.raza||""),
-      fechaNacimiento:normalizarFecha(v.fechaNacimiento),fechaIngreso:normalizarFecha(v.fechaIngreso),
+      id:String(v.id||""), horaRegistro:String(v.horaRegistro||""),
+      arete:String(v.arete||""), nombre:String(v.nombre||""), raza:String(v.raza||""),
+      fechaNacimiento:normalizarFecha(v.fechaNacimiento), fechaIngreso:normalizarFecha(v.fechaIngreso),
       estadoProductivo:String(v.estadoProductivo||"no_productiva"),
       estadoReproductivo:String(v.estadoReproductivo||"no_preñada"),
       estadoSanitario:String(v.estadoSanitario||"sana"),
       observaciones:String(v.observaciones||"")
     }));
     PRODUCCION = (d.Produccion||[]).map(p=>({
-      id:String(p.id||""),fecha:normalizarFecha(p.fecha),vacaId:String(p.vacaId||""),
-      turno:String(p.turno||""),litros:Number(p.litros)||0,
-      registradoPor:String(p.registradoPor||""),observaciones:String(p.observaciones||"")
+      id:String(p.id||""), horaRegistro:String(p.horaRegistro||""),
+      fecha:normalizarFecha(p.fecha), vacaId:String(p.vacaId||""),
+      turno:String(p.turno||""), litros:Number(p.litros)||0,
+      registradoPor:String(p.registradoPor||""), observaciones:String(p.observaciones||"")
     }));
     EVENTOS_SANITARIOS = (d.Sanidad||[]).map(e=>({
-      id:String(e.id||""),animalTipo:String(e.animalTipo||""),animalId:String(e.animalId||""),
-      tipo:String(e.tipo||""),descripcion:String(e.descripcion||""),responsable:String(e.responsable||""),
-      costo:Number(e.costo)||0,estado:String(e.estado||""),observaciones:String(e.observaciones||""),
+      id:String(e.id||""), horaRegistro:String(e.horaRegistro||""),
+      animalTipo:String(e.animalTipo||""), animalId:String(e.animalId||""),
+      tipo:String(e.tipo||""), descripcion:String(e.descripcion||""), responsable:String(e.responsable||""),
+      costo:Number(e.costo)||0, estado:String(e.estado||""), observaciones:String(e.observaciones||""),
       fecha:normalizarFecha(e.fecha)
     }));
     ENTREGAS_PIL = (d.EntregasPIL||[]).map(e=>({
-      id:String(e.id||""),fecha:normalizarFecha(e.fecha),hora:String(e.hora||""),
-      litros:Number(e.litros)||0,precioLitro:Number(e.precioLitro)||0,monto:Number(e.monto)||0,
-      comprobante:String(e.comprobante||""),registradoPor:String(e.registradoPor||""),observaciones:String(e.observaciones||"")
+      id:String(e.id||""), horaRegistro:String(e.horaRegistro||""),
+      fecha:normalizarFecha(e.fecha), hora:String(e.hora||""),
+      litros:Number(e.litros)||0, precioLitro:Number(e.precioLitro)||0, monto:Number(e.monto)||0,
+      comprobante:String(e.comprobante||""), registradoPor:String(e.registradoPor||""), observaciones:String(e.observaciones||"")
     }));
     TERNEROS = (d.Terneros||[]).map(t=>({
-      id:String(t.id||""),arete:String(t.arete||""),nombre:String(t.nombre||""),sexo:String(t.sexo||""),
-      fechaNacimiento:normalizarFecha(t.fechaNacimiento),madreId:String(t.madreId||""),padre:String(t.padre||""),
-      pesoNacimiento:Number(t.pesoNacimiento)||0,pesoActual:Number(t.pesoActual)||0,
-      estadoSalud:String(t.estadoSalud||""),estado:String(t.estado||""),observaciones:String(t.observaciones||"")
+      id:String(t.id||""), horaRegistro:String(t.horaRegistro||""),
+      arete:String(t.arete||""), nombre:String(t.nombre||""), sexo:String(t.sexo||""),
+      fechaNacimiento:normalizarFecha(t.fechaNacimiento), madreId:String(t.madreId||""), padre:String(t.padre||""),
+      pesoNacimiento:Number(t.pesoNacimiento)||0, pesoActual:Number(t.pesoActual)||0,
+      estadoSalud:String(t.estadoSalud||""), estado:String(t.estado||""), observaciones:String(t.observaciones||"")
     }));
     PESAJES_TERNEROS = (d.Pesajes||[]).map(p=>({
-      id:String(p.id||""),terneroId:String(p.terneroId||""),fecha:normalizarFecha(p.fecha),
-      peso:Number(p.peso)||0,observaciones:String(p.observaciones||"")
+      id:String(p.id||""), horaRegistro:String(p.horaRegistro||""),
+      terneroId:String(p.terneroId||""), fecha:normalizarFecha(p.fecha),
+      peso:Number(p.peso)||0, observaciones:String(p.observaciones||"")
     }));
 
     const ids=[...VACAS,...PRODUCCION,...EVENTOS_SANITARIOS,...ENTREGAS_PIL,...TERNEROS,...PESAJES_TERNEROS]
@@ -490,48 +541,70 @@ async function cargarDesdeSheets(){
     if(ultimaConPrecio) STATE.precioLitro = ultimaConPrecio.precioLitro;
 
     console.log("✔ Datos cargados:", {vacas:VACAS.length,produccion:PRODUCCION.length,sanidad:EVENTOS_SANITARIOS.length,pil:ENTREGAS_PIL.length,terneros:TERNEROS.length});
+    return true;
   }catch(err){
     console.error("Error leyendo Sheets:", err);
-    alert("No se pudieron cargar los datos desde Google Sheets.\nVerifica la URL del Apps Script o revisa la consola (F12).");
+    return false;
   }
 }
 
-function guardarVaca(v){
-  v.id=nextId("V"); VACAS.push(v);
-  enviarASheets("Vacas",["id","arete","nombre","raza","fechaNacimiento","fechaIngreso","estadoProductivo","estadoReproductivo","estadoSanitario","observaciones"],
-    [v.id,v.arete,v.nombre,v.raza,v.fechaNacimiento,v.fechaIngreso,v.estadoProductivo,v.estadoReproductivo,v.estadoSanitario,v.observaciones]);
-  return v;
+async function guardarVaca(v){
+  v.id = v.id || nextId("V");
+  v.horaRegistro = timestampAhora();
+  const r = await enviarASheets("insert", "Vacas",
+    ["id","horaRegistro","arete","nombre","raza","fechaNacimiento","fechaIngreso","estadoProductivo","estadoReproductivo","estadoSanitario","observaciones"],
+    [v.id,v.horaRegistro,v.arete,v.nombre,v.raza,v.fechaNacimiento,v.fechaIngreso,v.estadoProductivo,v.estadoReproductivo,v.estadoSanitario,v.observaciones]);
+  if(r.ok) VACAS.push(v);
+  return r;
 }
-function guardarProduccion(p){
-  p.id=nextId("P"); PRODUCCION.push(p);
-  enviarASheets("Produccion",["id","fecha","vacaId","turno","litros","registradoPor","observaciones"],
-    [p.id,p.fecha,p.vacaId,p.turno,p.litros,p.registradoPor,p.observaciones]);
-  return p;
+async function guardarProduccion(p){
+  p.id = p.id || nextId("P");
+  p.horaRegistro = timestampAhora();
+  const r = await enviarASheets("insert", "Produccion",
+    ["id","horaRegistro","fecha","vacaId","turno","litros","registradoPor","observaciones"],
+    [p.id,p.horaRegistro,p.fecha,p.vacaId,p.turno,p.litros,p.registradoPor,p.observaciones]);
+  if(r.ok) PRODUCCION.push(p);
+  return r;
 }
-function guardarEntregaPIL(e){
-  e.id=nextId("E"); ENTREGAS_PIL.push(e);
-  enviarASheets("EntregasPIL",["id","fecha","hora","litros","precioLitro","monto","comprobante","registradoPor","observaciones"],
-    [e.id,e.fecha,e.hora,e.litros,e.precioLitro,e.monto,e.comprobante,e.registradoPor,e.observaciones]);
-  return e;
+async function guardarEntregaPIL(e){
+  e.id = e.id || nextId("E");
+  e.horaRegistro = timestampAhora();
+  const r = await enviarASheets("insert", "EntregasPIL",
+    ["id","horaRegistro","fecha","hora","litros","precioLitro","monto","comprobante","registradoPor","observaciones"],
+    [e.id,e.horaRegistro,e.fecha,e.hora,e.litros,e.precioLitro,e.monto,e.comprobante,e.registradoPor,e.observaciones]);
+  if(r.ok) ENTREGAS_PIL.push(e);
+  return r;
 }
-function guardarEventoSanitario(ev){
-  ev.id=nextId("S"); EVENTOS_SANITARIOS.push(ev);
-  enviarASheets("Sanidad",["id","animalTipo","animalId","tipo","descripcion","responsable","costo","estado","observaciones"],
-    [ev.id,ev.animalTipo,ev.animalId,ev.tipo,ev.descripcion||"",ev.responsable||"",ev.costo||"",ev.estado||"",ev.observaciones||""]);
-  return ev;
+async function guardarEventoSanitario(ev){
+  ev.id = ev.id || nextId("S");
+  ev.horaRegistro = timestampAhora();
+  const r = await enviarASheets("insert", "Sanidad",
+    ["id","horaRegistro","animalTipo","animalId","tipo","descripcion","responsable","costo","estado","observaciones","fecha"],
+    [ev.id,ev.horaRegistro,ev.animalTipo,ev.animalId,ev.tipo,ev.descripcion||"",ev.responsable||"",ev.costo||"",ev.estado||"",ev.observaciones||"",ev.fecha||""]);
+  if(r.ok) EVENTOS_SANITARIOS.push(ev);
+  return r;
 }
-function guardarTernero(t){
-  t.id=nextId("T"); TERNEROS.push(t);
-  enviarASheets("Terneros",["id","arete","nombre","sexo","fechaNacimiento","madreId","padre","pesoNacimiento","pesoActual","estadoSalud","estado","observaciones"],
-    [t.id,t.arete,t.nombre,t.sexo,t.fechaNacimiento,t.madreId,t.padre||"",t.pesoNacimiento,t.pesoActual,t.estadoSalud,t.estado,t.observaciones]);
-  return t;
+async function guardarTernero(t){
+  t.id = t.id || nextId("T");
+  t.horaRegistro = timestampAhora();
+  const r = await enviarASheets("insert", "Terneros",
+    ["id","horaRegistro","arete","nombre","sexo","fechaNacimiento","madreId","padre","pesoNacimiento","pesoActual","estadoSalud","estado","observaciones"],
+    [t.id,t.horaRegistro,t.arete,t.nombre,t.sexo,t.fechaNacimiento,t.madreId,t.padre||"",t.pesoNacimiento,t.pesoActual,t.estadoSalud,t.estado,t.observaciones]);
+  if(r.ok) TERNEROS.push(t);
+  return r;
 }
-function guardarPesaje(p){
-  p.id=nextId("W"); PESAJES_TERNEROS.push(p);
-  const t=terneroById(p.terneroId);
-  if(t){ t.pesoActual=p.peso; t.fechaUltimoPesaje=p.fecha; }
-  enviarASheets("Pesajes",["id","terneroId","fecha","peso","observaciones"],[p.id,p.terneroId,p.fecha,p.peso,p.observaciones||""]);
-  return p;
+async function guardarPesaje(p){
+  p.id = p.id || nextId("W");
+  p.horaRegistro = timestampAhora();
+  const r = await enviarASheets("insert", "Pesajes",
+    ["id","horaRegistro","terneroId","fecha","peso","observaciones"],
+    [p.id,p.horaRegistro,p.terneroId,p.fecha,p.peso,p.observaciones||""]);
+  if(r.ok){
+    PESAJES_TERNEROS.push(p);
+    const t = terneroById(p.terneroId);
+    if(t) t.pesoActual = p.peso;
+  }
+  return r;
 }
 
 const STATE = {
@@ -549,19 +622,33 @@ function rutaPermitida(path){
   return lista.some(r=> path===r || path.startsWith(r+"/"));
 }
 
+function confirmacionRegistro(r, etiqueta){
+  const id = r && r.data && r.data.id;
+  toast(`${etiqueta} guardado correctamente. Número de registro: ${id || "no disponible"}.`, {registroId:id});
+}
 function toast(title, opts){
-  opts=opts||{};
-  const root=q("#toastRoot"); root.innerHTML="";
-  const div=document.createElement("div"); div.className="toast";
-  div.innerHTML=`<div class="tt"><span class="ic-ok">✓</span> ${esc(title)}</div>
+  opts = opts||{};
+  const root = q("#toastRoot"); root.innerHTML = "";
+  const div = document.createElement("div");
+  const tipo = opts.error ? "error" : (opts.info ? "info" : "");
+  div.className = "toast" + (tipo ? " "+tipo : "");
+  const icon = opts.error ? "✗" : (opts.info ? "ℹ" : "✓");
+  const iconClass = opts.error ? "ic-err" : (opts.info ? "ic-info" : "ic-ok");
+  div.innerHTML = `<div class="tt"><span class="${iconClass}">${icon}</span> <span>${esc(title)}</span></div>
     <div class="toast-actions">
-      ${opts.again?`<button data-t-again>Registrar otro</button>`:""}
-      <button data-t-dash>Ir al Dashboard</button>
+      ${opts.registroId ? `<button data-t-copy>Copiar número</button>` : ""}
+      ${opts.again && !opts.error ? `<button data-t-again>Registrar otro</button>` : ""}
+      ${!opts.error ? `<button data-t-dash>Ir al Dashboard</button>` : `<button data-t-close>Cerrar</button>`}
     </div>`;
   root.appendChild(div);
-  if(opts.again) q("[data-t-again]",div).onclick=()=>{hideToast();opts.again();};
-  q("[data-t-dash]",div).onclick=()=>{hideToast();navigate("#/dashboard");};
-  setTimeout(hideToast,6000);
+  const copyBtn=q("[data-t-copy]",div);
+  if(copyBtn) copyBtn.onclick=()=>{ if(navigator.clipboard) navigator.clipboard.writeText(String(opts.registroId)).catch(()=>{}); };
+  if(opts.again && !opts.error) q("[data-t-again]",div).onclick = ()=>{hideToast();opts.again();};
+  const dashBtn = q("[data-t-dash]",div);
+  if(dashBtn) dashBtn.onclick = ()=>{hideToast();navigate("#/dashboard");};
+  const closeBtn = q("[data-t-close]",div);
+  if(closeBtn) closeBtn.onclick = hideToast;
+  setTimeout(hideToast, opts.registroId ? 12000 : (opts.error ? 8000 : (opts.info ? 5500 : 3500)));
 }
 function hideToast(){ const t=q(".toast"); if(t){ t.classList.add("hide"); setTimeout(()=>q("#toastRoot").innerHTML="",250);} }
 function openModal(html){
@@ -664,6 +751,13 @@ function computeAlerts(){
   if(les) a.push({text:`${les} vaca(s) con lesión`,count:les});
   const enProd=VACAS.filter(v=>v.estadoProductivo==="produccion").length;
   if(enProd===0 && VACAS.length) a.push({text:`Sin vacas en producción`,count:0});
+
+  const torillos = TERNEROS.filter(t => t.sexo==="Macho" && etapaTernero(t).etapa==="Torillo");
+  if(torillos.length) a.push({text:`${torillos.length} torillo(s) en edad óptima de venta`,count:torillos.length});
+
+  const vaquillonas = TERNEROS.filter(t => t.sexo==="Hembra" && etapaTernero(t).etapa==="Vaquillona apta");
+  if(vaquillonas.length) a.push({text:`${vaquillonas.length} vaquillona(s) apta(s) para servicio`,count:vaquillonas.length});
+
   return a;
 }
 function updateBell(){ q("#bellDot").style.display = computeAlerts().length?"block":"none"; }
@@ -697,6 +791,9 @@ function render(){
     else if(path==="#/reportes") c.innerHTML=viewReportes(params);
     else if(path==="#/configuracion") c.innerHTML=viewConfiguracion();
     else c.innerHTML=viewDashboard();
+    if(path==="#/produccion") renderLivePanel("produccion");
+    else if(path==="#/pil" && STATE.esEncargado) renderLivePanel("pil");
+    else if(path==="#/sanidad") renderLivePanel("sanidad");
   }catch(e){ console.error(e); c.innerHTML=`<div class="card"><h3>Error</h3><p>${esc(e.message)}</p></div>`; }
   bindPageEvents(path,params);
   window.scrollTo(0,0);
@@ -821,6 +918,165 @@ function svgHBar(rows){
   return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;">${out}</svg>`;
 }
 
+/* ============ PANEL EN VIVO ============ */
+function liveKpisProduccion(){
+  const hoy = todayStr();
+  const prodHoy = PRODUCCION.filter(p=>p.fecha===hoy);
+  const litrosHoy = prodHoy.reduce((s,p)=>s+p.litros,0);
+  const vacasHoy = new Set(prodHoy.map(p=>p.vacaId)).size;
+  const pilHoy = ENTREGAS_PIL.filter(e=>e.fecha===hoy).reduce((s,e)=>s+e.litros,0);
+  const brechaHoy = +(litrosHoy - pilHoy).toFixed(1);
+  const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion").length;
+  const promedio = vacasHoy ? litrosHoy/vacasHoy : 0;
+  return {litrosHoy, vacasHoy, pilHoy, brechaHoy, enProd, promedio};
+}
+function liveKpisPIL(){
+  const hoy = todayStr();
+  const pilHoy = ENTREGAS_PIL.filter(e=>e.fecha===hoy);
+  const litrosPilHoy = pilHoy.reduce((s,e)=>s+e.litros,0);
+  const prodHoy = PRODUCCION.filter(p=>p.fecha===hoy).reduce((s,p)=>s+p.litros,0);
+  const brechaHoy = +(prodHoy - litrosPilHoy).toFixed(1);
+  return {litrosPilHoy, prodHoy, brechaHoy, numEntregas:pilHoy.length};
+}
+function liveKpisSanidad(){
+  const mes = monthStr();
+  const eventosMes = EVENTOS_SANITARIOS.filter(e=>e.fecha && e.fecha.startsWith(mes));
+  const activos = EVENTOS_SANITARIOS.filter(e=>e.estado==="activo").length;
+  const costoMes = eventosMes.reduce((s,e)=>s+(e.costo||0),0);
+  const totalMes = eventosMes.length;
+
+  const vacasMastitis = VACAS.filter(v=>v.estadoSanitario==="mastitis").length;
+  const vacasLesion   = VACAS.filter(v=>v.estadoSanitario==="lesion").length;
+
+  const norm = s => String(s||"").toLowerCase();
+  const tratMastitisMes = eventosMes.filter(e => norm(e.tipo).includes("mastitis")).length;
+  const lesionesMes     = eventosMes.filter(e => norm(e.tipo).includes("lesi")).length;
+
+  return {activos, costoMes, totalMes, vacasMastitis, vacasLesion, tratMastitisMes, lesionesMes};
+}
+function liveUltimosProduccion(){ const hoy=todayStr(); return PRODUCCION.filter(p=>p.fecha===hoy).slice().reverse().slice(0,5); }
+function liveUltimosPIL(){ return ENTREGAS_PIL.slice().reverse().slice(0,5); }
+function liveUltimosSanidad(){ return EVENTOS_SANITARIOS.slice().reverse().slice(0,5); }
+function liveChart7d(series){
+  const last7 = [...Array(7)].map((_,i)=>daysAgo(6-i));
+  const labels7 = last7.map(d=>fmtFecha(d).slice(0,5));
+  return svgBarSingle(labels7, series, {fmtLbl:lblL});
+}
+
+function renderLivePanel(tipo){
+  const el = q("#livePanel");
+  if(!el) return;
+  if(tipo==="produccion"){
+    const k = liveKpisProduccion();
+    const ultimos = liveUltimosProduccion();
+    const serie = [...Array(7)].map((_,i)=>{
+      const d = daysAgo(6-i);
+      return PRODUCCION.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0);
+    });
+    el.innerHTML = `
+      <div class="card" style="border-color:rgba(57,255,136,.4);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.6s infinite;"></span>
+          <h3 style="font-size:14px;margin:0;">Vista en vivo — hoy</h3>
+        </div>
+        <div class="grid grid-2" style="gap:10px;">
+          <div class="kpi"><div class="lbl">Litros hoy</div><div class="val" style="font-size:22px;">${numLitros(k.litrosHoy)}</div><div class="delta">${k.vacasHoy} vaca(s) ordeñada(s)</div></div>
+          <div class="kpi"><div class="lbl">Promedio/vaca</div><div class="val" style="font-size:22px;">${numLitros(+k.promedio.toFixed(1))}</div><div class="delta">Hoy</div></div>
+          <div class="kpi"><div class="lbl">Entregado a PIL</div><div class="val" style="font-size:22px;">${numLitros(k.pilHoy)}</div><div class="delta">Hoy</div></div>
+          <div class="kpi"><div class="lbl">Brecha del día</div><div class="val" style="font-size:22px;color:${Math.abs(k.brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(k.brechaHoy)}</div><div class="delta">Prod − PIL</div></div>
+        </div>
+        <div class="hr"></div>
+        <h3 style="font-size:12.5px;margin-bottom:6px;">Producción últimos 7 días</h3>
+        ${liveChart7d(serie)}
+        <div class="hr"></div>
+        <h3 style="font-size:12.5px;margin-bottom:8px;">Últimos registros de hoy</h3>
+        ${ultimos.length ? ultimos.map(p=>{
+          const v = vacaById(p.vacaId);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;">
+            <span>${v?esc(v.nombre):'—'} <span class="muted" style="font-size:11px;">· ${esc(p.turno)}</span></span>
+            <span class="mono" style="color:var(--accent);font-weight:700;">${p.litros} L</span>
+          </div>`;
+        }).join("") : `<p class="muted" style="font-size:12px;">Aún no hay registros hoy.</p>`}
+      </div>`;
+  }
+  else if(tipo==="pil"){
+    const k = liveKpisPIL();
+    const ultimos = liveUltimosPIL();
+    const seriePil = [...Array(7)].map((_,i)=>{
+      const d = daysAgo(6-i);
+      return ENTREGAS_PIL.filter(e=>e.fecha===d).reduce((s,e)=>s+e.litros,0);
+    });
+    el.innerHTML = `
+      <div class="card" style="border-color:rgba(77,215,255,.4);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--info);box-shadow:0 0 8px var(--info);animation:pulse 1.6s infinite;"></span>
+          <h3 style="font-size:14px;margin:0;">Vista en vivo — hoy</h3>
+        </div>
+        <div class="grid grid-2" style="gap:10px;">
+          <div class="kpi"><div class="lbl">Entregado hoy</div><div class="val" style="font-size:22px;">${numLitros(k.litrosPilHoy)}</div><div class="delta">${k.numEntregas} entrega(s)</div></div>
+          <div class="kpi"><div class="lbl">Producción hoy</div><div class="val" style="font-size:22px;">${numLitros(k.prodHoy)}</div><div class="delta">Total ordeñado</div></div>
+          <div class="kpi" style="grid-column:span 2;"><div class="lbl">Brecha del día</div><div class="val" style="font-size:22px;color:${Math.abs(k.brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(k.brechaHoy)}</div><div class="delta">Producción − Entrega</div></div>
+        </div>
+        <div class="hr"></div>
+        <h3 style="font-size:12.5px;margin-bottom:6px;">Entregas últimos 7 días</h3>
+        ${liveChart7d(seriePil)}
+        <div class="hr"></div>
+        <h3 style="font-size:12.5px;margin-bottom:8px;">Últimas entregas</h3>
+        ${ultimos.length ? ultimos.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;">
+          <span>${fmtFecha(e.fecha)} <span class="muted" style="font-size:11px;">· ${esc(e.hora||'')}</span></span>
+          <span class="mono" style="color:var(--info);font-weight:700;">${e.litros} L</span>
+        </div>`).join("") : `<p class="muted" style="font-size:12px;">Aún no hay entregas.</p>`}
+      </div>`;
+  }
+  else if(tipo==="sanidad"){
+    const k = liveKpisSanidad();
+    const ultimos = liveUltimosSanidad();
+    const serie = [...Array(7)].map((_,i)=>{
+      const d = daysAgo(6-i);
+      return EVENTOS_SANITARIOS.filter(e=>e.fecha===d).length;
+    });
+    el.innerHTML = `
+      <div class="card" style="border-color:rgba(255,92,122,.4);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 8px var(--danger);animation:pulse 1.6s infinite;"></span>
+          <h3 style="font-size:14px;margin:0;">Vista en vivo</h3>
+        </div>
+
+        <div class="grid grid-2" style="gap:10px;">
+          <div class="kpi"><div class="lbl">Eventos activos</div><div class="val" style="font-size:22px;color:${k.activos?'var(--danger)':'var(--ink)'}">${k.activos}</div><div class="delta">En tratamiento</div></div>
+          <div class="kpi"><div class="lbl">Costo del mes</div><div class="val" style="font-size:22px;">${numBs(k.costoMes)}</div><div class="delta">${k.totalMes} evento(s)</div></div>
+        </div>
+
+        <div class="hr"></div>
+        <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;">Estado actual del hato</h3>
+        <div class="grid grid-2" style="gap:10px;">
+          <div class="kpi"><div class="lbl">Vacas con mastitis</div><div class="val" style="font-size:22px;color:${k.vacasMastitis?'var(--danger)':'var(--ink)'}">${k.vacasMastitis}</div><div class="delta">Estado actual</div></div>
+          <div class="kpi"><div class="lbl">Vacas con lesión</div><div class="val" style="font-size:22px;color:${k.vacasLesion?'var(--warning)':'var(--ink)'}">${k.vacasLesion}</div><div class="delta">Estado actual</div></div>
+        </div>
+
+        <div class="hr"></div>
+        <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;">Registros del mes</h3>
+        <div class="grid grid-2" style="gap:10px;">
+          <div class="kpi"><div class="lbl">Trat. mastitis</div><div class="val" style="font-size:22px;color:${k.tratMastitisMes?'var(--danger)':'var(--ink)'}">${k.tratMastitisMes}</div><div class="delta">Este mes</div></div>
+          <div class="kpi"><div class="lbl">Lesiones</div><div class="val" style="font-size:22px;color:${k.lesionesMes?'var(--warning)':'var(--ink)'}">${k.lesionesMes}</div><div class="delta">Este mes</div></div>
+        </div>
+
+        <div class="hr"></div>
+        <h3 style="font-size:12.5px;margin-bottom:6px;">Eventos últimos 7 días</h3>
+        ${svgBarSingle([...Array(7)].map((_,i)=>fmtFecha(daysAgo(6-i)).slice(0,5)), serie, {fmtLbl:v=>v, colorFn:()=>"var(--danger)"})}
+        <div class="hr"></div>
+        <h3 style="font-size:12.5px;margin-bottom:8px;">Últimos eventos</h3>
+        ${ultimos.length ? ultimos.map(e=>{
+          const a = e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;">
+            <span>${a?esc(a.nombre):'—'} <span class="muted" style="font-size:11px;">· ${esc(e.tipo)}</span></span>
+            <span class="mono" style="font-size:11px;color:var(--ink-faint);">${fmtFecha(e.fecha)}</span>
+          </div>`;
+        }).join("") : `<p class="muted" style="font-size:12px;">Aún no hay eventos.</p>`}
+      </div>`;
+  }
+}
+
 /* ============ DASHBOARD ============ */
 function viewDashboard(){
   const hoy = todayStr();
@@ -843,12 +1099,8 @@ function viewDashboard(){
   const pilSerie = last7.map(d => ENTREGAS_PIL.filter(x=>x.fecha===d).reduce((s,e)=>s+e.litros,0));
   const brechaSerie = last7.map((d,i) => +(prodSerie[i]-pilSerie[i]).toFixed(1));
 
-  /* ============ PROPIETARIO ============ */
   if(STATE.role==="propietario"){
-    const ingresoSerie = last7.map(d => {
-      const litros = ENTREGAS_PIL.filter(x=>x.fecha===d).reduce((s,e)=>s+e.litros,0);
-      return +(litros * STATE.precioLitro).toFixed(2);
-    });
+    const ingresoSerie = last7.map(d => ENTREGAS_PIL.filter(x=>x.fecha===d).reduce((s,e)=>s+(e.monto||0),0));
     const costoSerie = last7.map(d => {
       const litros = PRODUCCION.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0);
       return +(litros * STATE.costoPorLitro).toFixed(2);
@@ -860,7 +1112,7 @@ function viewDashboard(){
     const totalPIL = pilSerie.reduce((s,x)=>s+x,0);
     const brechaAcum = +(totalLitros - totalPIL).toFixed(1);
 
-    const ingresoHoy = +(litrosPIL * STATE.precioLitro).toFixed(2);
+    const ingresoHoy = +(entregasHoy.reduce((s,e)=>s+(e.monto||0),0)).toFixed(2);
     const costoHoy = +(prodHoy * STATE.costoPorLitro).toFixed(2);
     const margenHoy = +(ingresoHoy - costoHoy).toFixed(2);
 
@@ -879,7 +1131,7 @@ function viewDashboard(){
     <div class="card" style="margin-top:14px;">
       <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 Margen estimado del día</div>
       <div class="grid grid-3">
-        <div class="kpi"><div class="lbl">Ingreso</div><div class="val">${numBs(ingresoHoy)}</div><div class="delta">${numLitros(litrosPIL)} × ${numBs(STATE.precioLitro)}</div></div>
+        <div class="kpi"><div class="lbl">Ingreso</div><div class="val">${numBs(ingresoHoy)}</div><div class="delta">${numLitros(litrosPIL)} entregados</div></div>
         <div class="kpi"><div class="lbl">Costo estimado</div><div class="val">${numBs(costoHoy)}</div><div class="delta">${numLitros(prodHoy)} × ${numBs(STATE.costoPorLitro)}</div></div>
         <div class="kpi"><div class="lbl">Margen</div><div class="val" style="color:${margenHoy<0?'var(--danger)':'var(--positive)'}">${numBs(margenHoy)}</div><div class="delta">Ingreso − Costo</div></div>
       </div>
@@ -913,7 +1165,7 @@ function viewDashboard(){
 
     <div class="charts-grid">
       <div class="card chart-card">
-        <h3>Ingreso vs Costo estimado (Bs/día)</h3><div class="sub">Calculado con precio actual ${numBs(STATE.precioLitro)}/L</div>
+        <h3>Ingreso vs Costo estimado (Bs/día)</h3><div class="sub">Ingreso real por entregas · Costo estimado por litro producido</div>
         ${svgBarCompare(labels7, ingresoSerie, costoSerie, "var(--positive)", "var(--danger)", v=>numBs(v), v=>numBs(v), lblBs, lblBs)}
         <div class="legend">
           <span><i style="background:var(--positive)"></i>Ingreso (Bs)</span>
@@ -955,7 +1207,6 @@ function viewDashboard(){
     </div>`;
   }
 
-  /* ============ ENCARGADO ============ */
   return `
   <div class="page-head">
     <div><h1>Dashboard</h1><p class="sub">Resumen productivo — ${fmtFecha(hoy)}</p></div>
@@ -1100,7 +1351,7 @@ function vacaFormModal(existing){
     <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-m>Cancelar</button><button type="submit" class="btn btn-acc">${existing?'Guardar cambios':'Registrar vaca'}</button></div>
     </form>`);
   qa("[data-close-m]",q("#modalRoot")).forEach(b=>b.onclick=closeModal);
-  q("#vacaForm").onsubmit=function(e){
+  q("#vacaForm").onsubmit = async function(e){
     e.preventDefault();
     const fd=new FormData(e.target);
     const arete=fd.get("arete").trim(), nombre=fd.get("nombre").trim();
@@ -1109,8 +1360,23 @@ function vacaFormModal(existing){
     ok=validateField(q("#f_nombre"),nombre.length>0,"El nombre es obligatorio.")&&ok;
     if(!ok) return;
     const data={arete,nombre,raza:fd.get("raza"),fechaNacimiento:fd.get("fechaNacimiento"),fechaIngreso:fd.get("fechaIngreso"),estadoProductivo:fd.get("estadoProductivo"),estadoReproductivo:fd.get("estadoReproductivo"),estadoSanitario:fd.get("estadoSanitario"),observaciones:fd.get("observaciones").trim()};
-    if(existing){ Object.assign(existing,data); closeModal(); toast("Vaca actualizada."); render(); }
-    else{ guardarVaca(data); closeModal(); toast("Vaca guardada.",{again:()=>vacaFormModal()}); render(); }
+    if(existing){
+      Object.assign(existing,data);
+      closeModal();
+      toast("Vaca actualizada (solo en memoria — edición persistente próximamente).");
+      render();
+    } else {
+      const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
+      const r = await guardarVaca(data);
+      if(r.ok){
+        closeModal();
+        confirmacionRegistro(r,"Vaca");
+        render();
+      } else {
+        if(btn){ btn.disabled=false; btn.textContent="Registrar vaca"; }
+        toast("No se pudo guardar en Sheets. Verificá conexión.", {error:true});
+      }
+    }
   };
 }
 
@@ -1129,6 +1395,7 @@ function viewFichaVaca(id){
     <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Nacimiento</div><div style="font-weight:600;">${fmtFecha(v.fechaNacimiento)}</div></div>
     <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Ingreso</div><div style="font-weight:600;">${fmtFecha(v.fechaIngreso)}</div></div>
     <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Sanitario</div><div>${tagSan(v.estadoSanitario)}</div></div>
+    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Registrado</div><div class="horaReg">${esc(v.horaRegistro||"—")}</div></div>
   </div></div>`;
 }
 
@@ -1139,33 +1406,49 @@ function viewProduccionForm(){
   const enProd=VACAS.filter(v=>v.estadoProductivo==="produccion");
   return `
   <div class="page-head"><div><h1>Registro de producción</h1><p class="sub">Registra los litros por vaca y turno</p></div></div>
-  <div class="card" style="max-width:560px;">
-    <form id="prodForm">
-      <div class="form-row">
-        <div class="f" id="f_pvaca"><label>Vaca <span class="req">*</span></label>
-          <select name="vacaId"><option value="">Seleccionar vaca...</option>${enProd.map(v=>`<option value="${v.id}">${v.arete} — ${v.nombre}</option>`).join("")}</select><div class="err"></div></div>
-        <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
-      </div>
-      <div class="form-row">
-        <div class="f"><label>Turno</label><select name="turno"><option>mañana</option><option>tarde</option><option>noche</option></select></div>
-        <div class="f" id="f_plitros"><label>Litros <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" placeholder="Ej: 9.5"><div class="err"></div></div>
-      </div>
-      <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--bg);"></div>
-      <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
-      <button type="submit" class="btn btn-acc" style="width:100%;">Guardar producción</button>
-    </form>
+  <div class="charts-grid" style="grid-template-columns:1fr 1.1fr;">
+    <div class="card">
+      <form id="prodForm">
+        <div class="form-row">
+          <div class="f" id="f_pvaca"><label>Vaca <span class="req">*</span></label>
+            <select name="vacaId" id="prodVacaId"><option value="">Seleccionar vaca...</option>${enProd.map(v=>`<option value="${v.id}">${v.arete} — ${v.nombre}</option>`).join("")}</select><div class="err"></div></div>
+          <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
+        </div>
+        <div class="form-row">
+          <div class="f"><label>Turno</label><select name="turno" id="prodTurno"><option>mañana</option><option>tarde</option><option>noche</option></select></div>
+          <div class="f" id="f_plitros"><label>Litros <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" id="prodLitros" placeholder="Ej: 9.5"><div class="err"></div></div>
+        </div>
+        <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--bg);"></div>
+        <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
+        <button type="submit" class="btn btn-acc" style="width:100%;">Guardar producción</button>
+      </form>
+    </div>
+    <div id="livePanel"></div>
   </div>`;
 }
 
 function viewProduccionHistorial(params){
+  const desde=params.desde||"", hasta=params.hasta||"";
+  const list=PRODUCCION.filter(p=>{
+    if(desde && p.fecha<desde) return false;
+    if(hasta && p.fecha>hasta) return false;
+    return true;
+  }).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totalLitros=list.reduce((s,p)=>s+p.litros,0);
+  const hayFiltro=!!(desde||hasta);
   return `
   <div class="page-head">
-    <div><h1>Historial de producción</h1><p class="sub">${PRODUCCION.length} registros · Total ${numLitros(PRODUCCION.reduce((s,p)=>s+p.litros,0))}</p></div>
+    <div><h1>Historial de producción</h1><p class="sub">${list.length}${hayFiltro?` de ${PRODUCCION.length}`:''} registros · Total ${numLitros(totalLitros)}</p></div>
     ${STATE.puedeRegistrar?`<button class="btn btn-acc" data-goto="#/produccion">+ Registrar producción</button>`:""}
   </div>
+  <div class="filters">
+    <div class="fdate"><span>Desde</span><input type="date" id="fDesde" value="${esc(desde)}" max="${todayStr()}"></div>
+    <div class="fdate"><span>Hasta</span><input type="date" id="fHasta" value="${esc(hasta)}" max="${todayStr()}"></div>
+    ${hayFiltro?`<a href="#/produccion/historial" class="filter-reset">Limpiar filtro de fecha</a>`:""}
+  </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Fecha</th><th>Vaca</th><th>Turno</th><th class="tright">Litros</th><th>Registrado por</th></tr></thead>
-    <tbody>${PRODUCCION.length? PRODUCCION.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(p=>{ const v=vacaById(p.vacaId); return `<tr><td>${fmtFecha(p.fecha)}</td><td>${v?esc(v.nombre):'—'}</td><td style="text-transform:capitalize">${p.turno}</td><td class="tright mono">${p.litros} L</td><td>${esc(p.registradoPor)}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="5">Aún no hay registros de producción.</td></tr>`}</tbody>
+    <thead><tr><th>Fecha</th><th>Vaca</th><th>Turno</th><th class="tright">Litros</th><th>Registrado por</th><th>Hora de registro</th></tr></thead>
+    <tbody>${list.length? list.map(p=>{ const v=vacaById(p.vacaId); return `<tr><td>${fmtFecha(p.fecha)}</td><td>${v?esc(v.nombre):'—'}</td><td style="text-transform:capitalize">${p.turno}</td><td class="tright mono">${p.litros} L</td><td>${esc(p.registradoPor)}</td><td class="horaReg">${esc(p.horaRegistro||"—")}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="6">${hayFiltro?'No hay registros en ese rango de fechas.':'Aún no hay registros de producción.'}</td></tr>`}</tbody>
   </table></div>`;
 }
 
@@ -1174,6 +1457,8 @@ function viewPIL(params){
   const hoy=todayStr();
   const esEncargado=STATE.esEncargado;
   const esPropietario=STATE.esPropietario;
+  const desde=params.desde||"", hasta=params.hasta||"";
+  const hayFiltro=!!(desde||hasta);
 
   const formEncargado = `
   <div class="card">
@@ -1207,26 +1492,38 @@ function viewPIL(params){
         <div class="f"><label>N° de comprobante</label><input name="comprobante" placeholder="Ej: PIL-58210"></div>
         <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--bg);"></div>
       </div>
-      <div class="form-row">
-        <div class="f"><label>Consumo interno (L)</label><input type="number" step="0.1" min="0" name="consumoInterno" value="0"></div>
-        <div class="f"><label>Descarte / mermas (L)</label><input type="number" step="0.1" min="0" name="descarte" value="0"></div>
-      </div>
       <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
       <button type="submit" class="btn btn-acc" style="width:100%;">Guardar entrega</button>
     </form>
   </div>`;
 
-  const fechasUnicas = [...new Set(ENTREGAS_PIL.map(e=>e.fecha))].sort((a,b)=>b.localeCompare(a));
+  const entregasFiltradas = ENTREGAS_PIL.filter(e=>{
+    if(desde && e.fecha<desde) return false;
+    if(hasta && e.fecha>hasta) return false;
+    return true;
+  }).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  const fechasUnicas = [...new Set(entregasFiltradas.map(e=>e.fecha))].sort((a,b)=>b.localeCompare(a));
   const comparaRows = fechasUnicas.map(f => {
     const prodDia = PRODUCCION.filter(p=>p.fecha===f).reduce((s,p)=>s+p.litros,0);
-    const entregasDia = ENTREGAS_PIL.filter(e=>e.fecha===f).reduce((s,e)=>s+e.litros,0);
-    return {fecha:f, prod:prodDia, entrega:entregasDia, dif:+(prodDia - entregasDia).toFixed(1)};
+    const entregasDiaList = ENTREGAS_PIL.filter(e=>e.fecha===f);
+    const entregasDia = entregasDiaList.reduce((s,e)=>s+e.litros,0);
+    const montoDia = entregasDiaList.reduce((s,e)=>s+(e.monto||0),0);
+    return {fecha:f, prod:prodDia, entrega:entregasDia, dif:+(prodDia - entregasDia).toFixed(1), monto:montoDia};
   });
+  const comparaRowsMostrar = hayFiltro ? comparaRows : comparaRows.slice(0,15);
+
+  const filtroFechas = `
+  <div class="filters">
+    <div class="fdate"><span>Desde</span><input type="date" id="fDesde" value="${esc(desde)}" max="${todayStr()}"></div>
+    <div class="fdate"><span>Hasta</span><input type="date" id="fHasta" value="${esc(hasta)}" max="${todayStr()}"></div>
+    ${hayFiltro?`<a href="#/pil" class="filter-reset">Limpiar filtro de fecha</a>`:""}
+  </div>`;
 
   const comparaTabla = `
   <div class="card">
     <h3 style="font-size:15px;margin-bottom:4px;">Producción vs. entrega</h3>
-    <p class="sub" style="margin-bottom:12px;">Diferencias por fecha — umbral: ${STATE.umbralDiferencia} L</p>
+    <p class="sub" style="margin-bottom:12px;">Diferencias por fecha — umbral: ${STATE.umbralDiferencia} L${hayFiltro?' · rango seleccionado':' · últimas 15 fechas'}</p>
     <div class="table-wrap"><table>
       <thead><tr>
         <th>Fecha</th>
@@ -1235,48 +1532,45 @@ function viewPIL(params){
         <th class="tright">Diferencia</th>
         ${esPropietario?'<th class="tright">Monto</th>':''}
       </tr></thead>
-      <tbody>${comparaRows.length? comparaRows.slice(0,15).map(r=>{
-        const monto = r.entrega * STATE.precioLitro;
+      <tbody>${comparaRowsMostrar.length? comparaRowsMostrar.map(r=>{
         return `<tr>
           <td>${fmtFecha(r.fecha)}</td>
           <td class="tright mono">${r.prod} L</td>
           <td class="tright mono">${r.entrega} L</td>
           <td class="tright mono" style="font-weight:700;color:${Math.abs(r.dif)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${r.dif} L</td>
-          ${esPropietario?`<td class="tright mono">${numBs(monto)}</td>`:''}
+          ${esPropietario?`<td class="tright mono">${numBs(r.monto)}</td>`:''}
         </tr>`;
-      }).join("") : `<tr class="empty-row"><td colspan="${esPropietario?5:4}">Aún no hay entregas registradas.</td></tr>`}</tbody>
+      }).join("") : `<tr class="empty-row"><td colspan="${esPropietario?5:4}">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
     </table></div>
   </div>`;
 
   const historial = esEncargado ? `
   <div class="sec-title"><h2>Historial de entregas</h2></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros entregados</th><th>Registrado por</th></tr></thead>
-    <tbody>${ENTREGAS_PIL.length? ENTREGAS_PIL.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(e=>`<tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td>${esc(e.registradoPor||'—')}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="4">Aún no hay entregas registradas.</td></tr>`}</tbody>
+    <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros entregados</th><th>Registrado por</th><th>Hora de registro</th></tr></thead>
+    <tbody>${entregasFiltradas.length? entregasFiltradas.map(e=>`<tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td>${esc(e.registradoPor||'—')}</td><td class="horaReg">${esc(e.horaRegistro||"—")}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="5">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
   </table></div>
   ` : `
   <div class="sec-title"><h2>Historial de entregas (con montos)</h2></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros</th><th class="tright">Precio actual</th><th class="tright">Monto</th><th>Comprobante</th></tr></thead>
-    <tbody>${ENTREGAS_PIL.length? ENTREGAS_PIL.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(e=>{
-      const precio = STATE.precioLitro;
-      const monto = e.litros * precio;
-      return `<tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(precio)}</td><td class="tright mono">${numBs(monto)}</td><td class="mono">${esc(e.comprobante||'—')}</td></tr>`;
-    }).join("") : `<tr class="empty-row"><td colspan="6">Aún no hay entregas registradas.</td></tr>`}</tbody>
+    <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros</th><th class="tright">Precio</th><th class="tright">Monto</th><th>Comprobante</th><th>Hora de registro</th></tr></thead>
+    <tbody>${entregasFiltradas.length? entregasFiltradas.map(e=>{
+      return `<tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(e.precioLitro||0)}</td><td class="tright mono">${numBs(e.monto||0)}</td><td class="mono">${esc(e.comprobante||'—')}</td><td class="horaReg">${esc(e.horaRegistro||"—")}</td></tr>`;
+    }).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
   </table></div>
   `;
 
   const totalProd = PRODUCCION.reduce((s,p)=>s+p.litros,0);
   const totalPIL = ENTREGAS_PIL.reduce((s,e)=>s+e.litros,0);
   const brechaTotal = +(totalProd - totalPIL).toFixed(1);
-  const totalMonto = totalPIL * STATE.precioLitro;
+  const totalMonto = ENTREGAS_PIL.reduce((s,e)=>s+(e.monto||0),0);
 
   const kpis = `
   <div class="grid ${esPropietario?'grid-4':'grid-3'}" style="margin-bottom:18px;">
     <div class="card kpi"><div class="lbl">Total producido</div><div class="val">${numLitros(totalProd)}</div></div>
     <div class="card kpi"><div class="lbl">Total entregado a PIL</div><div class="val">${numLitros(totalPIL)}</div></div>
     <div class="card kpi"><div class="lbl">Brecha acumulada</div><div class="val" style="color:${Math.abs(brechaTotal)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaTotal)}</div></div>
-    ${esPropietario?`<div class="card kpi"><div class="lbl">Monto acumulado</div><div class="val">${numBs(totalMonto)}</div><div class="delta">${numBs(STATE.precioLitro)}/L × ${numLitros(totalPIL)}</div></div>`:''}
+    ${esPropietario?`<div class="card kpi"><div class="lbl">Monto acumulado</div><div class="val">${numBs(totalMonto)}</div><div class="delta">Suma real de montos</div></div>`:''}
   </div>`;
 
   return `
@@ -1288,7 +1582,7 @@ function viewPIL(params){
   ${kpis}
   <div class="charts-grid">
     ${esEncargado ? formEncargado : formPropietario}
-    ${comparaTabla}
+    ${esEncargado ? `<div id="livePanel"></div>` : `<div>${filtroFechas}${comparaTabla}</div>`}
   </div>
   ${historial}`;
 }
@@ -1298,37 +1592,52 @@ function viewSanidadForm(){
   if(!STATE.puedeRegistrar) return `<div class="card">Acceso restringido.</div>`;
   return `
   <div class="page-head"><div><h1>Registro sanitario</h1><p class="sub">Registra eventos de salud del hato</p></div></div>
-  <div class="card" style="max-width:600px;">
-    <form id="sanForm">
-      <div class="form-row">
-        <div class="f"><label>Tipo de animal</label><select name="animalTipo" id="sanAnimalTipo"><option value="vaca">Vaca</option><option value="ternero">Ternero</option></select></div>
-        <div class="f" id="f_sananimal"><label>Animal <span class="req">*</span></label><select name="animalId" id="sanAnimalId"></select><div class="err"></div></div>
-      </div>
-      <div class="f"><label>Tipo de evento</label><select name="tipo" id="sanTipo">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join("")}</select></div>
-      <div class="f"><label>Descripción</label><textarea name="descripcion"></textarea></div>
-      <div class="form-row">
-        <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${todayStr()}" max="${todayStr()}"></div>
-        <div class="f"><label>Responsable</label><select name="responsable">${VETERINARIOS.map(v=>`<option>${v}</option>`).join("")}</select></div>
-      </div>
-      <div class="form-row">
-        <div class="f"><label>Tratamiento</label><input name="tratamiento"></div>
-        <div class="f"><label>Costo (Bs)</label><input type="number" min="0" step="0.5" name="costo" value="0"></div>
-      </div>
-      <div class="f"><label>Estado</label><select name="estado"><option value="activo">Activo</option><option value="finalizado">Finalizado</option></select></div>
-      <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
-      <button type="submit" class="btn btn-acc" style="width:100%;">Guardar evento</button>
-    </form>
+  <div class="charts-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="card">
+      <form id="sanForm">
+        <div class="form-row">
+          <div class="f"><label>Tipo de animal</label><select name="animalTipo" id="sanAnimalTipo"><option value="vaca">Vaca</option><option value="ternero">Ternero</option></select></div>
+          <div class="f" id="f_sananimal"><label>Animal <span class="req">*</span></label><select name="animalId" id="sanAnimalId"></select><div class="err"></div></div>
+        </div>
+        <div class="f"><label>Tipo de evento</label><select name="tipo" id="sanTipo">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join("")}</select></div>
+        <div class="f"><label>Descripción</label><textarea name="descripcion"></textarea></div>
+        <div class="form-row">
+          <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${todayStr()}" max="${todayStr()}"></div>
+          <div class="f"><label>Responsable</label><select name="responsable">${VETERINARIOS.map(v=>`<option>${v}</option>`).join("")}</select></div>
+        </div>
+        <div class="form-row">
+          <div class="f"><label>Tratamiento</label><input name="tratamiento"></div>
+          <div class="f"><label>Costo (Bs)</label><input type="number" min="0" step="0.5" name="costo" value="0"></div>
+        </div>
+        <div class="f"><label>Estado</label><select name="estado"><option value="activo">Activo</option><option value="finalizado">Finalizado</option></select></div>
+        <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
+        <button type="submit" class="btn btn-acc" style="width:100%;">Guardar evento</button>
+      </form>
+    </div>
+    <div id="livePanel"></div>
   </div>`;
 }
 function viewSanidadHistorial(params){
+  const desde=params.desde||"", hasta=params.hasta||"";
+  const hayFiltro=!!(desde||hasta);
+  const list=EVENTOS_SANITARIOS.filter(e=>{
+    if(desde && e.fecha<desde) return false;
+    if(hasta && e.fecha>hasta) return false;
+    return true;
+  }).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
   return `
   <div class="page-head">
-    <div><h1>Historial sanitario</h1><p class="sub">${EVENTOS_SANITARIOS.length} eventos</p></div>
+    <div><h1>Historial sanitario</h1><p class="sub">${list.length}${hayFiltro?` de ${EVENTOS_SANITARIOS.length}`:''} eventos</p></div>
     ${STATE.puedeRegistrar?`<button class="btn btn-acc" data-goto="#/sanidad">+ Nuevo evento</button>`:""}
   </div>
+  <div class="filters">
+    <div class="fdate"><span>Desde</span><input type="date" id="fDesde" value="${esc(desde)}" max="${todayStr()}"></div>
+    <div class="fdate"><span>Hasta</span><input type="date" id="fHasta" value="${esc(hasta)}" max="${todayStr()}"></div>
+    ${hayFiltro?`<a href="#/sanidad/historial" class="filter-reset">Limpiar filtro de fecha</a>`:""}
+  </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Fecha</th><th>Animal</th><th>Evento</th><th>Responsable</th><th class="tright">Costo</th><th>Estado</th></tr></thead>
-    <tbody>${EVENTOS_SANITARIOS.length? EVENTOS_SANITARIOS.map(e=>{ const a=e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId); return `<tr><td>${fmtFecha(e.fecha)}</td><td>${a?esc(a.nombre):'—'}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="6">Aún no hay eventos sanitarios.</td></tr>`}</tbody>
+    <thead><tr><th>Fecha</th><th>Animal</th><th>Evento</th><th>Responsable</th><th class="tright">Costo</th><th>Estado</th><th>Hora de registro</th></tr></thead>
+    <tbody>${list.length? list.map(e=>{ const a=e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId); return `<tr><td>${fmtFecha(e.fecha)}</td><td>${a?esc(a.nombre):'—'}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td><td class="horaReg">${esc(e.horaRegistro||"—")}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay eventos en ese rango de fechas.':'Aún no hay eventos sanitarios.'}</td></tr>`}</tbody>
   </table></div>`;
 }
 
@@ -1341,8 +1650,8 @@ function viewTerneraje(params){
     ${puede?`<button class="btn btn-acc" data-open-ternero-form>+ Nuevo ternero</button>`:""}
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Arete</th><th>Nombre</th><th>Sexo</th><th>Edad</th><th>Madre</th><th class="tright">Peso</th><th>Estado</th>${puede?'<th></th>':''}</tr></thead>
-    <tbody>${TERNEROS.length? TERNEROS.map(t=>{ const m=vacaById(t.madreId); return `<tr><td>${eartag(t.arete)}</td><td><a href="#/ternero/${t.id}" style="text-decoration:none;font-weight:700;color:var(--ink)">${esc(t.nombre)}</a></td><td>${t.sexo}</td><td>${edadDesde(t.fechaNacimiento)}</td><td>${m?esc(m.nombre):'—'}</td><td class="tright mono">${t.pesoActual} kg</td><td>${t.estado==='activo'?tag('Activo','positive'):t.estado==='vendido'?tag('Vendido','info'):tag('Fallecido','neutral')}</td>${puede?`<td class="tbl-actions"><button class="icbtn" data-open-pesaje="${t.id}">⚖️</button></td>`:""}</tr>`;}).join("") : `<tr class="empty-row"><td colspan="${puede?8:7}">${puede?'Aún no hay terneros registrados. Usa "+ Nuevo ternero".':'Aún no hay terneros registrados.'}</td></tr>`}</tbody>
+    <thead><tr><th>Arete</th><th>Nombre</th><th>Sexo</th><th>Edad</th><th>Etapa</th><th>Madre</th><th class="tright">Peso</th><th>Estado</th>${puede?'<th></th>':''}</tr></thead>
+    <tbody>${TERNEROS.length? TERNEROS.map(t=>{ const m=vacaById(t.madreId); const info=etapaTernero(t); return `<tr><td>${eartag(t.arete)}</td><td><a href="#/ternero/${t.id}" style="text-decoration:none;font-weight:700;color:var(--ink)">${esc(t.nombre)}</a></td><td>${t.sexo}</td><td>${edadDesde(t.fechaNacimiento)}</td><td>${tag(info.etapa, info.urgencia)}</td><td>${m?esc(m.nombre):'—'}</td><td class="tright mono">${t.pesoActual} kg</td><td>${t.estado==='activo'?tag('Activo','positive'):t.estado==='vendido'?tag('Vendido','info'):tag('Fallecido','neutral')}</td>${puede?`<td class="tbl-actions"><button class="icbtn" data-open-pesaje="${t.id}">⚖️</button></td>`:""}</tr>`;}).join("") : `<tr class="empty-row"><td colspan="${puede?9:8}">${puede?'Aún no hay terneros registrados. Usa "+ Nuevo ternero".':'Aún no hay terneros registrados.'}</td></tr>`}</tbody>
   </table></div>`;
 }
 function terneroFormModal(existing){
@@ -1373,7 +1682,7 @@ function terneroFormModal(existing){
     <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-m>Cancelar</button><button type="submit" class="btn btn-acc">${existing?'Guardar cambios':'Registrar ternero'}</button></div>
     </form>`);
   qa("[data-close-m]",q("#modalRoot")).forEach(b=>b.onclick=closeModal);
-  q("#terForm").onsubmit=function(e){
+  q("#terForm").onsubmit = async function(e){
     e.preventDefault();
     const fd=new FormData(e.target);
     const arete=fd.get("arete").trim(), nombre=fd.get("nombre").trim();
@@ -1383,8 +1692,23 @@ function terneroFormModal(existing){
     ok=validateField(q("#f_tnombre"),nombre.length>0,"El nombre es obligatorio.")&&ok;
     if(!ok) return;
     const data={arete,nombre,sexo:fd.get("sexo"),fechaNacimiento:fd.get("fechaNacimiento"),madreId:fd.get("madreId")||"",padre:fd.get("padre").trim(),pesoNacimiento:pesoNac,pesoActual:existing?existing.pesoActual:pesoNac,estadoSalud:fd.get("estadoSalud").trim()||"Sano",estado:fd.get("estado"),observaciones:fd.get("observaciones").trim()};
-    if(existing){ Object.assign(existing,data); closeModal(); toast("Ternero actualizado."); render(); }
-    else{ guardarTernero(data); closeModal(); toast("Ternero guardado.",{again:()=>terneroFormModal()}); render(); }
+    if(existing){
+      Object.assign(existing,data);
+      closeModal();
+      toast("Ternero actualizado (solo en memoria — edición persistente próximamente).");
+      render();
+    } else {
+      const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
+      const r = await guardarTernero(data);
+      if(r.ok){
+        closeModal();
+        confirmacionRegistro(r,"Ternero");
+        render();
+      } else {
+        if(btn){ btn.disabled=false; btn.textContent="Registrar ternero"; }
+        toast("No se pudo guardar en Sheets. Verificá conexión.", {error:true});
+      }
+    }
   };
 }
 function viewFichaTernero(id){
@@ -1392,18 +1716,30 @@ function viewFichaTernero(id){
   if(!t) return `<div class="card">Ternero no encontrado. <a href="#/terneraje">Volver</a></div>`;
   const madre=vacaById(t.madreId);
   const puede=STATE.puedeRegistrar;
+  const info=etapaTernero(t);
   return `
   <div class="breadcrumb"><a href="#/terneraje">Terneraje</a> / ${esc(t.nombre)}</div>
-  <div class="page-head"><div><h1>${esc(t.nombre)}</h1><div style="margin-top:6px;display:flex;gap:7px;flex-wrap:wrap;">${eartag(t.arete)}${tag(t.sexo,'neutral')}</div></div>
+  <div class="page-head"><div><h1>${esc(t.nombre)}</h1><div style="margin-top:6px;display:flex;gap:7px;flex-wrap:wrap;">${eartag(t.arete)}${tag(t.sexo,'neutral')}${tag(info.etapa, info.urgencia)}</div></div>
   ${puede?`<button class="btn btn-sm btn-acc" data-open-pesaje="${t.id}">⚖️ Registrar pesaje</button>`:""}</div>
-  <div class="card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Peso nacimiento</div><div style="font-weight:600;">${t.pesoNacimiento} kg</div></div>
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Peso actual</div><div style="font-weight:600;">${t.pesoActual} kg</div></div>
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Madre</div><div style="font-weight:600;">${madre?esc(madre.nombre):'—'}</div></div>
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Padre</div><div style="font-weight:600;">${t.padre?esc(t.padre):'—'}</div></div>
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Nacimiento</div><div style="font-weight:600;">${fmtFecha(t.fechaNacimiento)}</div></div>
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Estado salud</div><div style="font-weight:600;">${esc(t.estadoSalud)}</div></div>
-  </div></div>`;
+  <div class="card" style="border-color:${info.urgencia==='warning'?'rgba(255,210,63,.5)':'var(--border)'};">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="font-size:24px;">${info.urgencia==='warning'?'⭐':info.urgencia==='positive'?'✅':'ℹ️'}</div>
+      <div>
+        <div style="font-weight:700;font-size:14.5px;">${esc(info.sugerencia)}</div>
+        <div style="font-size:12px;color:var(--ink-soft);">Etapa actual: ${esc(info.etapa)} · Edad: ${edadDesde(t.fechaNacimiento)}</div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Peso nacimiento</div><div style="font-weight:600;">${t.pesoNacimiento} kg</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Peso actual</div><div style="font-weight:600;">${t.pesoActual} kg</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Madre</div><div style="font-weight:600;">${madre?esc(madre.nombre):'—'}</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Padre</div><div style="font-weight:600;">${t.padre?esc(t.padre):'—'}</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Nacimiento</div><div style="font-weight:600;">${fmtFecha(t.fechaNacimiento)}</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Estado salud</div><div style="font-weight:600;">${esc(t.estadoSalud)}</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Registrado</div><div class="horaReg">${esc(t.horaRegistro||"—")}</div></div>
+    </div>
+  </div>`;
 }
 function pesajeModal(terneroId){
   if(!STATE.puedeRegistrar) return;
@@ -1420,27 +1756,59 @@ function pesajeModal(terneroId){
     <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-m>Cancelar</button><button type="submit" class="btn btn-acc">Guardar</button></div>
     </form>`);
   qa("[data-close-m]",q("#modalRoot")).forEach(b=>b.onclick=closeModal);
-  q("#pesajeForm").onsubmit=function(e){
+  q("#pesajeForm").onsubmit = async function(e){
     e.preventDefault();
     const fd=new FormData(e.target);
     const peso=parseFloat(fd.get("peso"));
     if(!validateField(q("#f_peso"),!isNaN(peso)&&peso>=0,"Ingresa un peso válido.")) return;
-    guardarPesaje({terneroId,fecha:fd.get("fecha"),peso,observaciones:fd.get("observaciones").trim()});
-    closeModal(); toast("Pesaje guardado."); render();
+    const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
+    const r = await guardarPesaje({terneroId,fecha:fd.get("fecha"),peso,observaciones:fd.get("observaciones").trim()});
+    if(r.ok){
+      closeModal();
+      confirmacionRegistro(r,"Pesaje");
+      render();
+    } else {
+      if(btn){ btn.disabled=false; btn.textContent="Guardar"; }
+      toast("No se pudo guardar el pesaje.", {error:true});
+    }
   };
 }
 
 /* ============ REPORTES / CONFIG ============ */
-function viewReportes(){
+function viewReportes(params){
   if(!STATE.puedeVerFinanzas) return `<div class="card">Acceso restringido.</div>`;
+  params=params||{};
   const totalLitrosProd = PRODUCCION.reduce((s,p)=>s+p.litros,0);
   const totalLitrosPIL = ENTREGAS_PIL.reduce((s,e)=>s+e.litros,0);
-  const totalIngreso = ENTREGAS_PIL.reduce((s,e)=>s+e.litros*STATE.precioLitro,0);
+  const totalIngreso = ENTREGAS_PIL.reduce((s,e)=>s+(e.monto||0),0);
   const totalCosto = totalLitrosProd * STATE.costoPorLitro;
   const totalMargen = totalIngreso - totalCosto;
   const brechaTotal = totalLitrosProd - totalLitrosPIL;
+
+  const mes = /^\d{4}-\d{2}$/.test(params.mes||"") ? params.mes : monthStr();
+  const desde = /^\d{4}-\d{2}-\d{2}$/.test(params.desde||"") && params.desde.startsWith(mes) ? params.desde : "";
+  const hasta = /^\d{4}-\d{2}-\d{2}$/.test(params.hasta||"") && params.hasta.startsWith(mes) ? params.hasta : "";
+  const enRango = f => f.startsWith(mes) && (!desde || f>=desde) && (!hasta || f<=hasta);
+  const prodMes = PRODUCCION.filter(p=>enRango(p.fecha));
+  const pilMes = ENTREGAS_PIL.filter(e=>enRango(e.fecha));
+  const sanMes = EVENTOS_SANITARIOS.filter(e=>enRango(e.fecha));
+  const litrosProdMes = prodMes.reduce((s,p)=>s+p.litros,0);
+  const litrosPilMes = pilMes.reduce((s,e)=>s+e.litros,0);
+  const brechaMes = +(litrosProdMes - litrosPilMes).toFixed(1);
+  const ingresoMes = pilMes.reduce((s,e)=>s+(e.monto||0),0);
+  const costoMes = litrosProdMes * STATE.costoPorLitro;
+  const margenMes = ingresoMes - costoMes;
+  const costoSanMes = sanMes.reduce((s,e)=>s+(e.costo||0),0);
+
+  const diasMes = [...new Set([...prodMes.map(p=>p.fecha), ...pilMes.map(e=>e.fecha)])].sort();
+  const filasDiarias = diasMes.map(f=>{
+    const pDia = prodMes.filter(p=>p.fecha===f).reduce((s,p)=>s+p.litros,0);
+    const eDia = pilMes.filter(e=>e.fecha===f).reduce((s,e)=>s+e.litros,0);
+    return {fecha:f, prod:pDia, entrega:eDia, dif:+(pDia-eDia).toFixed(1)};
+  });
+
   return `
-  <div class="page-head"><div><h1>Reportes</h1><p class="sub">Análisis financiero y productivo acumulado — precio actual ${numBs(STATE.precioLitro)}/L</p></div></div>
+  <div class="page-head"><div><h1>Reportes</h1><p class="sub">Análisis financiero y productivo acumulado</p></div></div>
   <div class="grid grid-4">
     <div class="card kpi"><div class="lbl">Litros producidos</div><div class="val">${numLitros(totalLitrosProd)}</div></div>
     <div class="card kpi"><div class="lbl">Litros entregados</div><div class="val">${numLitros(totalLitrosPIL)}</div></div>
@@ -1454,6 +1822,34 @@ function viewReportes(){
       {label:"Costo total", value:totalCosto, color:"var(--danger)", fmt:numBs},
       {label:"Margen total", value:Math.max(totalMargen,0), color:totalMargen<0?"var(--danger)":"var(--accent)", fmt:()=>numBs(totalMargen)},
     ])}
+  </div>
+  <div class="sec-title"><h2>Resumen mensual</h2></div>
+  <div class="card">
+    <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px;">
+      <div class="month-picker"><span>Mes</span><input type="month" id="fMes" value="${esc(mes)}" max="${monthStr()}"></div>
+      <div class="fdate"><span>Desde (en el mes)</span><input type="date" id="reporteDesde" value="${esc(desde)}" min="${mes}-01" max="${todayStr()}"></div>
+      <div class="fdate"><span>Hasta (en el mes)</span><input type="date" id="reporteHasta" value="${esc(hasta)}" min="${mes}-01" max="${todayStr()}"></div>
+      <button type="button" class="btn btn-acc btn-sm" id="exportarResumenMensual">⬇ Exportar resumen CSV</button>
+      <div class="sub" style="padding-bottom:9px;">${esc(fmtMes(mes))}</div>
+    </div>
+    <div class="grid grid-4">
+      <div class="kpi"><div class="lbl">Litros producidos</div><div class="val">${numLitros(litrosProdMes)}</div></div>
+      <div class="kpi"><div class="lbl">Litros entregados</div><div class="val">${numLitros(litrosPilMes)}</div></div>
+      <div class="kpi"><div class="lbl">Brecha del mes</div><div class="val" style="color:${Math.abs(brechaMes)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaMes)}</div></div>
+      <div class="kpi"><div class="lbl">Margen del mes</div><div class="val" style="color:${margenMes<0?'var(--danger)':'var(--positive)'}">${numBs(margenMes)}</div></div>
+    </div>
+    <div class="hr"></div>
+    <div class="grid grid-3">
+      <div class="kpi"><div class="lbl">Ingreso del mes</div><div class="val">${numBs(ingresoMes)}</div><div class="delta">${pilMes.length} entrega(s) a PIL</div></div>
+      <div class="kpi"><div class="lbl">Costo estimado</div><div class="val">${numBs(costoMes)}</div><div class="delta">${numLitros(litrosProdMes)} × ${numBs(STATE.costoPorLitro)}</div></div>
+      <div class="kpi"><div class="lbl">Costo sanitario</div><div class="val">${numBs(costoSanMes)}</div><div class="delta">${sanMes.length} evento(s)</div></div>
+    </div>
+    ${filasDiarias.length?`
+    <div class="hr"></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Fecha</th><th class="tright">Producción</th><th class="tright">Entrega PIL</th><th class="tright">Diferencia</th></tr></thead>
+      <tbody>${filasDiarias.map(r=>`<tr><td>${fmtFecha(r.fecha)}</td><td class="tright mono">${r.prod} L</td><td class="tright mono">${r.entrega} L</td><td class="tright mono" style="font-weight:700;color:${Math.abs(r.dif)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${r.dif} L</td></tr>`).join("")}</tbody>
+    </table></div>` : `<p class="muted" style="margin-top:14px;font-size:13px;">Sin movimientos registrados en ${esc(fmtMes(mes))}.</p>`}
   </div>`;
 }
 
@@ -1480,16 +1876,15 @@ function viewConfiguracion(){
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:10px;">Notas</h3>
       <p class="muted" style="font-size:13px;line-height:1.6;">
-        El <b>precio por litro</b> se usa para calcular el monto de cada entrega a PIL automáticamente (el Encargado no lo ve).<br><br>
+        El <b>precio por litro</b> se usa para calcular el monto de cada entrega a PIL (el Encargado no lo ve).<br><br>
+        Los montos de cada entrega quedan <b>congelados con el precio del momento</b>. Cambiar el precio NO modifica montos pasados.<br><br>
         El <b>costo por litro</b> es una estimación de gastos usada para calcular el margen.<br><br>
-        El <b>umbral de brecha</b> marca cuándo la diferencia producción−entrega se considera alerta.<br><br>
-        <b>Al cambiar el precio</b>, todos los montos se recalculan automáticamente con el nuevo valor.
+        El <b>umbral de brecha</b> marca cuándo la diferencia producción−entrega se considera alerta.
       </p>
     </div>
   </div>`;
 }
 
-/* ===== BÚSQUEDA ===== */
 function doGlobalSearch(term){
   const box=q("#searchResults");
   term=term.trim().toLowerCase();
@@ -1512,7 +1907,7 @@ function bindPageEvents(path,params){
     if(editV && STATE.puedeRegistrar){ vacaFormModal(vacaById(editV.getAttribute("data-edit-vaca"))); return; }
     const delV=e.target.closest("[data-del-vaca]");
     if(delV && STATE.puedeRegistrar){ const id=delV.getAttribute("data-del-vaca"); const v=vacaById(id);
-      confirmDialog(`¿Eliminar la vaca "${v.nombre}"?`, ()=>{ VACAS=VACAS.filter(x=>x.id!==id); toast("Eliminada."); render(); }); return; }
+      confirmDialog(`¿Eliminar la vaca "${v.nombre}"? (solo en memoria por ahora)`, ()=>{ VACAS=VACAS.filter(x=>x.id!==id); toast("Eliminada de memoria."); render(); }); return; }
     const openV=e.target.closest("[data-open-vaca-form]");
     if(openV && STATE.puedeRegistrar){ vacaFormModal(); return; }
     const openT=e.target.closest("[data-open-ternero-form]");
@@ -1536,7 +1931,7 @@ function bindPageEvents(path,params){
 
   if(path==="#/produccion" && STATE.puedeRegistrar){
     const form=q("#prodForm");
-    if(form) form.onsubmit=function(e){
+    if(form) form.onsubmit = async function(e){
       e.preventDefault();
       const fd=new FormData(e.target);
       const vacaId=fd.get("vacaId"), litros=parseFloat(fd.get("litros"));
@@ -1544,11 +1939,21 @@ function bindPageEvents(path,params){
       ok=validateField(q("#f_pvaca"),!!vacaId,"Selecciona una vaca.")&&ok;
       ok=validateField(q("#f_plitros"),!isNaN(litros)&&litros>=0,"Ingresa litros válidos.")&&ok;
       if(!ok) return;
-      guardarProduccion({fecha:fd.get("fecha"),vacaId,turno:fd.get("turno"),litros,registradoPor:fd.get("registradoPor"),observaciones:fd.get("observaciones").trim()});
-      toast("Producción guardada.",{again:()=>render()});
-      e.target.reset();
-      q("[name=fecha]",e.target).value=todayStr();
-      q("[name=registradoPor]",e.target).value=STATE.user.nombre;
+      const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
+      const r = await guardarProduccion({fecha:fd.get("fecha"),vacaId,turno:fd.get("turno"),litros,registradoPor:fd.get("registradoPor"),observaciones:fd.get("observaciones").trim()});
+      if(r.ok){
+        confirmacionRegistro(r,"Producción");
+        renderLivePanel("produccion");
+        q("#prodVacaId").value = "";
+        q("#prodLitros").value = "";
+        const obs = q("textarea[name=observaciones]", e.target); if(obs) obs.value = "";
+        q("#prodVacaId").focus();
+        if(btn){ btn.disabled=false; btn.textContent="Guardar producción"; }
+        updateBell();
+      } else {
+        if(btn){ btn.disabled=false; btn.textContent="Guardar producción"; }
+        toast("No se pudo guardar. Verificá conexión.", {error:true});
+      }
     };
   }
 
@@ -1558,7 +1963,6 @@ function bindPageEvents(path,params){
       const litrosEl = q("[name=litros]", form);
       const precioEl = q("[name=precioLitro]", form);
       const preview = q("#pilMontoPreview");
-
       if(preview && precioEl && litrosEl){
         const updatePreview = ()=>{
           const l = parseFloat(litrosEl.value)||0;
@@ -1569,26 +1973,22 @@ function bindPageEvents(path,params){
         precioEl.addEventListener("input", updatePreview);
         updatePreview();
       }
-
-      form.onsubmit = function(e){
+      form.onsubmit = async function(e){
         e.preventDefault();
         const fd=new FormData(e.target);
         const litros=parseFloat(fd.get("litros"));
         if(!validateField(q("#f_pillitros"),!isNaN(litros)&&litros>=0,"Ingresa litros válidos.")) return;
-
         let precio;
         if(STATE.esEncargado){
           precio = STATE.precioLitro;
         } else {
           precio = parseFloat(fd.get("precioLitro"));
           if(!validateField(q("#f_pilprecio"),!isNaN(precio)&&precio>=0,"Ingresa un precio válido.")) return;
-          if(precio !== STATE.precioLitro){
-            STATE.precioLitro = precio;
-          }
+          if(precio !== STATE.precioLitro) STATE.precioLitro = precio;
         }
-
         const monto = +(litros*precio).toFixed(2);
-        guardarEntregaPIL({
+        const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
+        const r = await guardarEntregaPIL({
           fecha: fd.get("fecha"),
           hora: fd.get("hora"),
           litros,
@@ -1598,8 +1998,21 @@ function bindPageEvents(path,params){
           registradoPor: fd.get("registradoPor"),
           observaciones: (fd.get("observaciones")||"").trim()
         });
-        toast("Entrega a PIL registrada.", {again:()=>render()});
-        render();
+        if(r.ok){
+          confirmacionRegistro(r,"Entrega a PIL");
+          if(STATE.esEncargado){
+            renderLivePanel("pil");
+            q("[name=litros]", e.target).value = "";
+            q("[name=litros]", e.target).focus();
+          } else {
+            render();
+          }
+          if(btn){ btn.disabled=false; btn.textContent="Guardar entrega"; }
+          updateBell();
+        } else {
+          if(btn){ btn.disabled=false; btn.textContent="Guardar entrega"; }
+          toast("No se pudo guardar la entrega.", {error:true});
+        }
       };
     }
   }
@@ -1612,15 +2025,34 @@ function bindPageEvents(path,params){
     };
     refreshAnimales();
     q("#sanAnimalTipo").onchange=refreshAnimales;
-    q("#sanForm").onsubmit=function(e){
+    q("#sanForm").onsubmit = async function(e){
       e.preventDefault();
       const fd=new FormData(e.target);
       const animalId=fd.get("animalId");
       if(!validateField(q("#f_sananimal"),!!animalId,"Selecciona un animal.")) return;
       const data={animalTipo:fd.get("animalTipo"),animalId,tipo:fd.get("tipo"),descripcion:(fd.get("descripcion")||"").trim(),tratamiento:(fd.get("tratamiento")||"").trim(),fecha:fd.get("fecha")||todayStr(),responsable:fd.get("responsable"),costo:parseFloat(fd.get("costo"))||0,estado:fd.get("estado"),observaciones:(fd.get("observaciones")||"").trim()};
-      guardarEventoSanitario(data);
-      toast("Evento sanitario guardado.",{again:()=>render()});
-      e.target.reset(); refreshAnimales();
+      const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
+      const r = await guardarEventoSanitario(data);
+      if(r.ok){
+        // Aplicar cambio de estado sanitario en memoria (solo vacas) y unificar toast
+        const res = aplicarCambioEstadoPorEvento(data);
+        if(res.cambio){
+          const nombreV = res.vaca ? res.vaca.nombre : "";
+          const labelAnt = ESTADO_SAN_LABEL[res.estadoAnterior] || res.estadoAnterior;
+          const labelNue = ESTADO_SAN_LABEL[res.estadoNuevo] || res.estadoNuevo;
+          toast(`Evento guardado. Número de registro: ${r.data.id}. ${nombreV} ahora figura con "${labelNue}" (antes: ${labelAnt}).`, {registroId:r.data.id, info:true});
+        } else {
+          confirmacionRegistro(r,"Evento sanitario");
+        }
+        renderLivePanel("sanidad");
+        e.target.reset();
+        refreshAnimales();
+        if(btn){ btn.disabled=false; btn.textContent="Guardar evento"; }
+        updateBell();
+      } else {
+        if(btn){ btn.disabled=false; btn.textContent="Guardar evento"; }
+        toast("No se pudo guardar el evento.", {error:true});
+      }
     };
   }
 
@@ -1629,12 +2061,71 @@ function bindPageEvents(path,params){
       const p=parseFloat(q("#precioInput").value); if(!isNaN(p)) STATE.precioLitro=p;
       const c=parseFloat(q("#costoInput").value); if(!isNaN(c)) STATE.costoPorLitro=c;
       const u=parseInt(q("#umbralInput").value,10); if(!isNaN(u)) STATE.umbralDiferencia=u;
-      toast("Parámetros actualizados. Los montos se recalculan con el nuevo precio.");
+      toast("Parámetros actualizados.");
       render();
     };
   }
+
+  if(path==="#/reportes" && STATE.puedeVerFinanzas){
+    const mesInput=q("#fMes");
+    const aplicarReporte=()=>{
+      const p=new URLSearchParams();
+      const m=q("#fMes").value; if(m) p.set("mes",m);
+      const desde=q("#reporteDesde").value, hasta=q("#reporteHasta").value;
+      if(desde && desde.startsWith(m)) p.set("desde",desde);
+      if(hasta && hasta.startsWith(m)) p.set("hasta",hasta);
+      if(desde && hasta && desde>hasta){ toast("La fecha inicial no puede ser posterior a la final.",{error:true});return; }
+      navigate("#/reportes?"+p.toString());
+    };
+    if(mesInput) mesInput.onchange=()=>navigate("#/reportes?mes="+encodeURIComponent(mesInput.value));
+    q("#reporteDesde").onchange=aplicarReporte;
+    q("#reporteHasta").onchange=aplicarReporte;
+    q("#exportarResumenMensual").onclick=()=>exportarResumenMensual(params);
+  }
 }
+
+function exportarResumenMensual(params){
+  if(!STATE.puedeVerFinanzas) return;
+  const mes=/^\d{4}-\d{2}$/.test(params.mes||"")?params.mes:monthStr();
+  const desde=params.desde&&params.desde.startsWith(mes)?params.desde:"";
+  const hasta=params.hasta&&params.hasta.startsWith(mes)?params.hasta:"";
+  const enRango=f=>f.startsWith(mes)&&(!desde||f>=desde)&&(!hasta||f<=hasta);
+  const produccion=PRODUCCION.filter(p=>enRango(p.fecha));
+  const entregas=ENTREGAS_PIL.filter(e=>enRango(e.fecha));
+  const sanidad=EVENTOS_SANITARIOS.filter(e=>enRango(e.fecha));
+  const fechas=[...new Set([...produccion.map(p=>p.fecha),...entregas.map(e=>e.fecha)])].sort();
+  const sumar=(arr,clave)=>arr.reduce((s,x)=>s+(Number(x[clave])||0),0);
+  const filas=fechas.map(f=>{
+    const prod=sumar(produccion.filter(p=>p.fecha===f),"litros");
+    const pil=entregas.filter(e=>e.fecha===f);
+    const entregado=sumar(pil,"litros");
+    const ingreso=sumar(pil,"monto");
+    const costo=prod*STATE.costoPorLitro;
+    return [f,prod,entregado,prod-entregado,ingreso,costo,ingreso-costo];
+  });
+  const prodTotal=sumar(produccion,"litros"), pilTotal=sumar(entregas,"litros");
+  const ingresoTotal=sumar(entregas,"monto"), costoTotal=prodTotal*STATE.costoPorLitro;
+  const sanTotal=sumar(sanidad,"costo");
+  const csv=[
+    ["Resumen mensual de Control Lechero",mes],
+    ["Desde",desde||mes+"-01"],["Hasta",hasta||"Fin del mes"],
+    ["Nota","Costos y margen estimados; el costo sanitario se informa por separado y no se descuenta nuevamente"],
+    ["Producción total (L)",prodTotal],["Entrega total (L)",pilTotal],
+    ["Ingresos registrados (Bs)",ingresoTotal],["Costo estimado (Bs)",costoTotal],
+    ["Margen estimado (Bs)",ingresoTotal-costoTotal],["Costo sanitario registrado (Bs)",sanTotal],
+    [],["Fecha","Producido (L)","Entregado (L)","Diferencia (L)","Ingreso (Bs)","Costo estimado (Bs)","Margen estimado (Bs)"],...filas
+  ].map(row=>row.map(v=>{const s=String(v??"");return '"'+s.replace(/"/g,'""')+'"';}).join(";")).join("\r\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=`resumen_lechero_${mes}.csv`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast("Resumen mensual exportado en CSV.");
+}
+
 function debounce(fn,ms){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+
+function monthStr(){ return todayStr().slice(0,7); }
+function fmtMes(ym){ const [y,m]=String(ym||"").split("-"); if(!y||!m) return ym||""; const M=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]; return `${M[(+m)-1]||m} de ${y}`; }
 
 /* ===== INIT ===== */
 function populateUserSelect(role){
@@ -1655,6 +2146,7 @@ q("#loginBtn").onclick=async function(){
   const userId=q("#userSelect").value;
   STATE.role=role;
   STATE.user=USUARIOS.find(u=>u.id===userId)||USUARIOS.find(u=>u.rol===role);
+  if(!STATE.user){ toast("No hay usuario seleccionado.", {error:true}); return; }
   const btn=q("#loginBtn"); btn.disabled=true; btn.textContent="Cargando datos...";
   q("#screen-login").style.display="none";
   q("#app").classList.add("on");
@@ -1663,12 +2155,27 @@ q("#loginBtn").onclick=async function(){
     <h3>Cargando datos desde Google Sheets...</h3>
     <p class="muted" style="margin-top:6px;">Esto puede tardar unos segundos.</p>
   </div>`;
-  await cargarDesdeSheets();
+  const ok = await cargarDesdeSheets();
   btn.disabled=false; btn.textContent="Entrar al sistema";
+  if(!ok){
+    toast("No se pudieron cargar los datos desde Sheets. No se mostrarán datos actualizados; verifica la conexión antes de registrar.", {error:true});
+  }
   location.hash="#/dashboard";
   render();
 };
 
+let sincronizando = false;
+async function sincronizarVista(){
+  if(!STATE.user || sincronizando || q("#modalRoot").children.length || document.hidden) return;
+  const ruta=currentRoute().path;
+  if(["#/produccion","#/sanidad","#/configuracion"].includes(ruta)) return;
+  if(document.activeElement && ["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) return;
+  sincronizando=true;
+  try{ if(await cargarDesdeSheets()) render(); }
+  finally{ sincronizando=false; }
+}
+setInterval(sincronizarVista,30000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) sincronizarVista(); });
 q("#hamburgerBtn").onclick=openDrawer;
 q("#drawerBg").onclick=closeDrawer;
 q("#bellBtn").onclick=function(){
