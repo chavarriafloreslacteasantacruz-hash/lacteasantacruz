@@ -1174,20 +1174,28 @@ function viewDashboard(){
         ${svgLineChart(labels7, prodSerie, {fmt:numLitros, fmtLbl:lblL})}
       </div>
       <div class="card chart-card">
-        <h3>Distribución del hato</h3><div class="sub">Por estado productivo</div>
-        <div style="display:flex;align-items:center;gap:16px;">
+        <h3>Distribución del hato</h3><div class="sub">Por estado productivo · Cada vaca se cuenta una sola vez</div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
           ${svgDonut([
             {label:"En producción", value:enProd, color:"var(--positive)"},
-            {label:"Secado", value:VACAS.filter(v=>v.estadoProductivo==="secado").length, color:"var(--info)"},
-            {label:"Mastitis", value:mastitis, color:"var(--danger)"},
-            {label:"Descarte", value:VACAS.filter(v=>v.estadoProductivo==="descarte").length, color:"var(--warning)"},
+            {label:"En secado", value:VACAS.filter(v=>v.estadoProductivo==="secado").length, color:"var(--info)"},
+            {label:"Para descarte", value:VACAS.filter(v=>v.estadoProductivo==="descarte").length, color:"var(--warning)"},
+            {label:"No productiva", value:VACAS.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length, color:"var(--ink-faint)"},
           ], VACAS.length)}
           <div class="legend" style="flex-direction:column;gap:7px;">
             <span><i style="background:var(--positive)"></i>En producción (${enProd})</span>
-            <span><i style="background:var(--info)"></i>Secado (${VACAS.filter(v=>v.estadoProductivo==="secado").length})</span>
-            <span><i style="background:var(--danger)"></i>Mastitis (${mastitis})</span>
-            <span><i style="background:var(--warning)"></i>Descarte (${VACAS.filter(v=>v.estadoProductivo==="descarte").length})</span>
+            <span><i style="background:var(--info)"></i>En secado (${VACAS.filter(v=>v.estadoProductivo==="secado").length})</span>
+            <span><i style="background:var(--warning)"></i>Para descarte (${VACAS.filter(v=>v.estadoProductivo==="descarte").length})</span>
+            <span><i style="background:var(--ink-faint)"></i>No productiva / sin clasificar (${VACAS.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length})</span>
           </div>
+        </div>
+        <div class="hr"></div>
+        <h3>Estado sanitario del hato</h3><div class="sub">Indicadores independientes del estado productivo</div>
+        <div class="legend" style="gap:14px;">
+          <span><i style="background:var(--danger)"></i>Mastitis (${mastitis})</span>
+          <span><i style="background:var(--warning)"></i>Lesiones (${lesion})</span>
+          <span><i style="background:var(--positive)"></i>Sanas (${VACAS.filter(v=>v.estadoSanitario==="sana").length})</span>
+          <span><i style="background:var(--info)"></i>En tratamiento (${VACAS.filter(v=>v.estadoSanitario==="tratamiento").length})</span>
         </div>
       </div>
     </div>
