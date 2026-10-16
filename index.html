@@ -391,6 +391,30 @@ function lblBs(n){ return (Math.round(+n||0)).toLocaleString("es-BO"); }
 function vacaById(id){ return VACAS.find(v=>String(v.id)===String(id)); }
 function terneroById(id){ return TERNEROS.find(t=>String(t.id)===String(id)); }
 
+function horaActualLocal(){
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+// Compatibilidad con horas antiguas serializadas como fecha ISO de 1899.
+function mostrarHora(valor){
+  const t=String(valor==null?"":valor).trim();
+  if(!t) return "—";
+  // Google Sheets puede convertir horas antiguas en fechas ISO de 1899.
+  const iso=t.match(/^1899-12-(?:30|31)T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?$/i);
+  if(iso) return `${iso[1]}:${iso[2]}`;
+  const hh=t.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if(hh) return `${hh[1].padStart(2,"0")}:${hh[2]}`;
+  return t;
+}
+function mostrarRegistro(valor){
+  const t=String(valor==null?"":valor).trim();
+  if(!t) return "—";
+  // Una hora de 1899 NO es una fecha real de registro: no inventarla.
+  if(/^1899-12-(?:30|31)T/i.test(t)) return mostrarHora(t);
+  const iso=t.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+  if(iso) return `${iso[1]} ${iso[2]}`;
+  return t;
+}
 function timestampAhora(){
   const d = new Date();
   const f = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -472,16 +496,20 @@ function eartag(t){ return `<span class="eartag">${esc(t)}</span>`; }
 
 async function enviarASheets(accion, tipo, encabezados, fila){
   try{
-    const res = await fetch(URL_APPS_SCRIPT, {
+    const controller = new AbortController();
+    const timeout = setTimeout(()=>controller.abort(),15000);
+    let res;
+    try { res = await fetch(URL_APPS_SCRIPT, {
+      signal:controller.signal,
       method:"POST",
       headers:{ "Content-Type":"text/plain;charset=utf-8" },
       body: JSON.stringify({ accion: accion||"insert", tipo, encabezados, fila, id: String(fila[0]) })
-    });
+    }); } finally { clearTimeout(timeout); }
     const json = await res.json();
     if(json && json.ok) return {ok:true, data:json};
     return {ok:false, error:(json && json.error) || "Respuesta no OK"};
   }catch(err){
-    return {ok:false, error:String(err)};
+    return {ok:false, error:err && err.name==='AbortError' ? 'Tiempo de espera agotado (15 segundos). Verifica la implementación de Apps Script y consulta si el registro llegó a Sheets antes de reintentarlo.' : String(err)};
   }
 }
 
@@ -516,7 +544,7 @@ async function cargarDesdeSheets(){
     }));
     ENTREGAS_PIL = (d.EntregasPIL||[]).map(e=>({
       id:String(e.id||""), horaRegistro:String(e.horaRegistro||""),
-      fecha:normalizarFecha(e.fecha), hora:String(e.hora||""),
+      fecha:normalizarFecha(e.fecha), hora:mostrarHora(e.hora)==="—" ? "" : mostrarHora(e.hora),
       litros:Number(e.litros)||0, precioLitro:Number(e.precioLitro)||0, monto:Number(e.monto)||0,
       comprobante:String(e.comprobante||""), registradoPor:String(e.registradoPor||""), observaciones:String(e.observaciones||"")
     }));
@@ -554,7 +582,7 @@ async function guardarVaca(v){
   const r = await enviarASheets("insert", "Vacas",
     ["id","horaRegistro","arete","nombre","raza","fechaNacimiento","fechaIngreso","estadoProductivo","estadoReproductivo","estadoSanitario","observaciones"],
     [v.id,v.horaRegistro,v.arete,v.nombre,v.raza,v.fechaNacimiento,v.fechaIngreso,v.estadoProductivo,v.estadoReproductivo,v.estadoSanitario,v.observaciones]);
-  if(r.ok) VACAS.push(v);
+  if(r.ok){ v.horaRegistro = r.data.horaRegistro || v.horaRegistro; VACAS.push(v); }
   return r;
 }
 async function guardarProduccion(p){
@@ -563,7 +591,7 @@ async function guardarProduccion(p){
   const r = await enviarASheets("insert", "Produccion",
     ["id","horaRegistro","fecha","vacaId","turno","litros","registradoPor","observaciones"],
     [p.id,p.horaRegistro,p.fecha,p.vacaId,p.turno,p.litros,p.registradoPor,p.observaciones]);
-  if(r.ok) PRODUCCION.push(p);
+  if(r.ok){ p.horaRegistro = r.data.horaRegistro || p.horaRegistro; PRODUCCION.push(p); }
   return r;
 }
 async function guardarEntregaPIL(e){
@@ -572,7 +600,7 @@ async function guardarEntregaPIL(e){
   const r = await enviarASheets("insert", "EntregasPIL",
     ["id","horaRegistro","fecha","hora","litros","precioLitro","monto","comprobante","registradoPor","observaciones"],
     [e.id,e.horaRegistro,e.fecha,e.hora,e.litros,e.precioLitro,e.monto,e.comprobante,e.registradoPor,e.observaciones]);
-  if(r.ok) ENTREGAS_PIL.push(e);
+  if(r.ok){ e.horaRegistro = r.data.horaRegistro || e.horaRegistro; ENTREGAS_PIL.push(e); }
   return r;
 }
 async function guardarEventoSanitario(ev){
@@ -581,7 +609,7 @@ async function guardarEventoSanitario(ev){
   const r = await enviarASheets("insert", "Sanidad",
     ["id","horaRegistro","animalTipo","animalId","tipo","descripcion","responsable","costo","estado","observaciones","fecha"],
     [ev.id,ev.horaRegistro,ev.animalTipo,ev.animalId,ev.tipo,ev.descripcion||"",ev.responsable||"",ev.costo||"",ev.estado||"",ev.observaciones||"",ev.fecha||""]);
-  if(r.ok) EVENTOS_SANITARIOS.push(ev);
+  if(r.ok){ ev.horaRegistro = r.data.horaRegistro || ev.horaRegistro; EVENTOS_SANITARIOS.push(ev); }
   return r;
 }
 async function guardarTernero(t){
@@ -590,7 +618,7 @@ async function guardarTernero(t){
   const r = await enviarASheets("insert", "Terneros",
     ["id","horaRegistro","arete","nombre","sexo","fechaNacimiento","madreId","padre","pesoNacimiento","pesoActual","estadoSalud","estado","observaciones"],
     [t.id,t.horaRegistro,t.arete,t.nombre,t.sexo,t.fechaNacimiento,t.madreId,t.padre||"",t.pesoNacimiento,t.pesoActual,t.estadoSalud,t.estado,t.observaciones]);
-  if(r.ok) TERNEROS.push(t);
+  if(r.ok){ t.horaRegistro = r.data.horaRegistro || t.horaRegistro; TERNEROS.push(t); }
   return r;
 }
 async function guardarPesaje(p){
@@ -600,6 +628,7 @@ async function guardarPesaje(p){
     ["id","horaRegistro","terneroId","fecha","peso","observaciones"],
     [p.id,p.horaRegistro,p.terneroId,p.fecha,p.peso,p.observaciones||""]);
   if(r.ok){
+    p.horaRegistro = r.data.horaRegistro || p.horaRegistro;
     PESAJES_TERNEROS.push(p);
     const t = terneroById(p.terneroId);
     if(t) t.pesoActual = p.peso;
@@ -1303,6 +1332,7 @@ function viewHatoLista(params){
     <div><h1>${puede?"Registro de vacas":"Hato"}</h1><p class="sub">${VACAS.length} animales registrados</p></div>
     ${puede?`<button class="btn btn-acc" data-open-vaca-form>+ Nueva vaca</button>`:""}
   </div>
+  <div class="charts-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(260px,1fr);align-items:start"><div>
   <div class="filters">
     <div class="fsearch"><input type="text" id="fHatoSearch" placeholder="Buscar por arete o nombre..." value="${esc(params.q||"")}"></div>
     <select id="fHatoProd"><option value="">Estado productivo (todos)</option>${Object.entries(ESTADO_PROD_LABEL).map(([k,v])=>`<option value="${k}" ${fp===k?'selected':''}>${v}</option>`).join("")}</select>
@@ -1321,7 +1351,7 @@ function viewHatoLista(params){
       <td>${tagSan(v.estadoSanitario)}</td>
       ${puede?`<td class="tbl-actions"><a class="icbtn" href="#/hato/${v.id}">👁</a><button class="icbtn" data-edit-vaca="${v.id}">✏️</button><button class="icbtn danger" data-del-vaca="${v.id}">🗑</button></td>`:""}
     </tr>`).join("") : `<tr class="empty-row"><td colspan="${puede?7:6}">${puede?'Aún no hay vacas registradas. Usa el botón "+ Nueva vaca".':'Aún no hay vacas registradas.'}</td></tr>`}</tbody>
-  </table></div>`;
+  </table></div></div><div>${panelResumenVacas()}</div></div>`;
 }
 
 function vacaFormModal(existing){
@@ -1395,7 +1425,7 @@ function viewFichaVaca(id){
     <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Nacimiento</div><div style="font-weight:600;">${fmtFecha(v.fechaNacimiento)}</div></div>
     <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Ingreso</div><div style="font-weight:600;">${fmtFecha(v.fechaIngreso)}</div></div>
     <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Sanitario</div><div>${tagSan(v.estadoSanitario)}</div></div>
-    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Registrado</div><div class="horaReg">${esc(v.horaRegistro||"—")}</div></div>
+    <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Registrado</div><div class="horaReg">${esc(mostrarRegistro(v.horaRegistro))}</div></div>
   </div></div>`;
 }
 
@@ -1448,7 +1478,7 @@ function viewProduccionHistorial(params){
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Fecha</th><th>Vaca</th><th>Turno</th><th class="tright">Litros</th><th>Registrado por</th><th>Hora de registro</th></tr></thead>
-    <tbody>${list.length? list.map(p=>{ const v=vacaById(p.vacaId); return `<tr><td>${fmtFecha(p.fecha)}</td><td>${v?esc(v.nombre):'—'}</td><td style="text-transform:capitalize">${p.turno}</td><td class="tright mono">${p.litros} L</td><td>${esc(p.registradoPor)}</td><td class="horaReg">${esc(p.horaRegistro||"—")}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="6">${hayFiltro?'No hay registros en ese rango de fechas.':'Aún no hay registros de producción.'}</td></tr>`}</tbody>
+    <tbody>${list.length? list.map(p=>{ const v=vacaById(p.vacaId); return `<tr><td>${fmtFecha(p.fecha)}</td><td>${v?esc(v.nombre):'—'}</td><td style="text-transform:capitalize">${p.turno}</td><td class="tright mono">${p.litros} L</td><td>${esc(p.registradoPor)}</td><td class="horaReg">${esc(mostrarRegistro(p.horaRegistro))}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="6">${hayFiltro?'No hay registros en ese rango de fechas.':'Aún no hay registros de producción.'}</td></tr>`}</tbody>
   </table></div>`;
 }
 
@@ -1466,7 +1496,7 @@ function viewPIL(params){
     <form id="pilForm">
       <div class="form-row">
         <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
-        <div class="f"><label>Hora</label><input type="time" name="hora" value="07:30"></div>
+        <div class="f"><label>Hora real de entrega (editable)</label><input type="time" name="hora" value="${horaActualLocal()}"></div>
       </div>
       <div class="f" id="f_pillitros"><label>Litros entregados <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" placeholder="Ej: 480"><div class="err"></div></div>
       <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--bg);"></div>
@@ -1481,7 +1511,7 @@ function viewPIL(params){
     <form id="pilForm">
       <div class="form-row">
         <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
-        <div class="f"><label>Hora</label><input type="time" name="hora" value="07:30"></div>
+        <div class="f"><label>Hora real de entrega (editable)</label><input type="time" name="hora" value="${horaActualLocal()}"></div>
       </div>
       <div class="form-row">
         <div class="f" id="f_pillitros"><label>Litros entregados <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" placeholder="Ej: 480"><div class="err"></div></div>
@@ -1548,14 +1578,14 @@ function viewPIL(params){
   <div class="sec-title"><h2>Historial de entregas</h2></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros entregados</th><th>Registrado por</th><th>Hora de registro</th></tr></thead>
-    <tbody>${entregasFiltradas.length? entregasFiltradas.map(e=>`<tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td>${esc(e.registradoPor||'—')}</td><td class="horaReg">${esc(e.horaRegistro||"—")}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="5">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
+    <tbody>${entregasFiltradas.length? entregasFiltradas.map(e=>`<tr><td>${fmtFecha(e.fecha)}</td><td>${esc(mostrarHora(e.hora))}</td><td class="tright mono">${e.litros} L</td><td>${esc(e.registradoPor||'—')}</td><td class="horaReg">${esc(mostrarRegistro(e.horaRegistro))}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="5">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
   </table></div>
   ` : `
   <div class="sec-title"><h2>Historial de entregas (con montos)</h2></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros</th><th class="tright">Precio</th><th class="tright">Monto</th><th>Comprobante</th><th>Hora de registro</th></tr></thead>
     <tbody>${entregasFiltradas.length? entregasFiltradas.map(e=>{
-      return `<tr><td>${fmtFecha(e.fecha)}</td><td>${e.hora}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(e.precioLitro||0)}</td><td class="tright mono">${numBs(e.monto||0)}</td><td class="mono">${esc(e.comprobante||'—')}</td><td class="horaReg">${esc(e.horaRegistro||"—")}</td></tr>`;
+      return `<tr><td>${fmtFecha(e.fecha)}</td><td>${esc(mostrarHora(e.hora))}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(e.precioLitro||0)}</td><td class="tright mono">${numBs(e.monto||0)}</td><td class="mono">${esc(e.comprobante||'—')}</td><td class="horaReg">${esc(mostrarRegistro(e.horaRegistro))}</td></tr>`;
     }).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
   </table></div>
   `;
@@ -1637,8 +1667,37 @@ function viewSanidadHistorial(params){
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Fecha</th><th>Animal</th><th>Evento</th><th>Responsable</th><th class="tright">Costo</th><th>Estado</th><th>Hora de registro</th></tr></thead>
-    <tbody>${list.length? list.map(e=>{ const a=e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId); return `<tr><td>${fmtFecha(e.fecha)}</td><td>${a?esc(a.nombre):'—'}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td><td class="horaReg">${esc(e.horaRegistro||"—")}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay eventos en ese rango de fechas.':'Aún no hay eventos sanitarios.'}</td></tr>`}</tbody>
+    <tbody>${list.length? list.map(e=>{ const a=e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId); return `<tr><td>${fmtFecha(e.fecha)}</td><td>${a?esc(a.nombre):'—'}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td><td class="horaReg">${esc(mostrarRegistro(e.horaRegistro))}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay eventos en ese rango de fechas.':'Aún no hay eventos sanitarios.'}</td></tr>`}</tbody>
   </table></div>`;
+}
+
+/* Paneles de composición del hato: datos reales cargados, sin valores simulados. */
+function panelDistribucion(titulo, grupos, total){
+  const max=Math.max(1,...grupos.map(x=>x[1]));
+  return `<div class="card" style="margin-bottom:14px"><h3 style="margin:0 0 12px">${esc(titulo)}</h3>
+    ${grupos.length?grupos.map(([nombre,cantidad])=>`<div style="margin:11px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:5px"><span>${esc(nombre)}</span><strong>${cantidad} (${total?Math.round(100*cantidad/total):0}%)</strong></div>
+      <div style="height:9px;background:var(--surface,#e9eef0);border-radius:8px;overflow:hidden"><div style="width:${100*cantidad/max}%;height:100%;background:var(--accent,#398777);border-radius:8px"></div></div>
+    </div>`).join(""):`<p class="sub">Todavía no hay registros.</p>`}</div>`;
+}
+function panelResumenTerneraje(){
+  const activos=TERNEROS.filter(t=>t.estado==='activo');
+  const machos=activos.filter(t=>String(t.sexo).toLowerCase()==='macho').length;
+  const hembras=activos.filter(t=>String(t.sexo).toLowerCase()==='hembra').length;
+  return `<div class="card" style="margin-bottom:14px"><h3 style="margin:0 0 12px">Composición del terneraje</h3>
+    <div class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+      <div class="kpi"><div class="lbl">Activos</div><div class="val">${activos.length}</div></div>
+      <div class="kpi"><div class="lbl">Machos</div><div class="val">${machos}</div></div>
+      <div class="kpi"><div class="lbl">Hembras</div><div class="val">${hembras}</div></div>
+    </div></div>${panelDistribucion('Distribución por sexo (activos)',[['Machos',machos],['Hembras',hembras]],activos.length)}`;
+}
+function panelResumenVacas(){
+  const razas={}; const estados={};
+  VACAS.forEach(v=>{const raza=String(v.raza||'Sin especificar').trim()||'Sin especificar';razas[raza]=(razas[raza]||0)+1;
+    const est=ESTADO_PROD_LABEL[v.estadoProductivo]||v.estadoProductivo||'Sin especificar';estados[est]=(estados[est]||0)+1;});
+  return `<div class="card" style="margin-bottom:14px"><h3 style="margin:0 0 10px">Resumen del hato</h3><div class="kpi"><div class="lbl">Total de vacas registradas</div><div class="val">${VACAS.length}</div></div></div>
+  ${panelDistribucion('Distribución por raza',Object.entries(razas).sort((a,b)=>b[1]-a[1]),VACAS.length)}
+  ${panelDistribucion('Estado productivo',Object.entries(estados).sort((a,b)=>b[1]-a[1]),VACAS.length)}`;
 }
 
 /* ============ TERNERAJE ============ */
@@ -1649,10 +1708,11 @@ function viewTerneraje(params){
     <div><h1>Terneraje</h1><p class="sub">${TERNEROS.length} terneros registrados</p></div>
     ${puede?`<button class="btn btn-acc" data-open-ternero-form>+ Nuevo ternero</button>`:""}
   </div>
-  <div class="table-wrap"><table>
+  <div class="charts-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(260px,1fr);align-items:start">
+  <div class="table-wrap" style="overflow-x:auto"><table>
     <thead><tr><th>Arete</th><th>Nombre</th><th>Sexo</th><th>Edad</th><th>Etapa</th><th>Madre</th><th class="tright">Peso</th><th>Estado</th>${puede?'<th></th>':''}</tr></thead>
     <tbody>${TERNEROS.length? TERNEROS.map(t=>{ const m=vacaById(t.madreId); const info=etapaTernero(t); return `<tr><td>${eartag(t.arete)}</td><td><a href="#/ternero/${t.id}" style="text-decoration:none;font-weight:700;color:var(--ink)">${esc(t.nombre)}</a></td><td>${t.sexo}</td><td>${edadDesde(t.fechaNacimiento)}</td><td>${tag(info.etapa, info.urgencia)}</td><td>${m?esc(m.nombre):'—'}</td><td class="tright mono">${t.pesoActual} kg</td><td>${t.estado==='activo'?tag('Activo','positive'):t.estado==='vendido'?tag('Vendido','info'):tag('Fallecido','neutral')}</td>${puede?`<td class="tbl-actions"><button class="icbtn" data-open-pesaje="${t.id}">⚖️</button></td>`:""}</tr>`;}).join("") : `<tr class="empty-row"><td colspan="${puede?9:8}">${puede?'Aún no hay terneros registrados. Usa "+ Nuevo ternero".':'Aún no hay terneros registrados.'}</td></tr>`}</tbody>
-  </table></div>`;
+  </table></div><div>${panelResumenTerneraje()}</div></div>`;
 }
 function terneroFormModal(existing){
   if(!STATE.puedeRegistrar) return;
@@ -1737,7 +1797,7 @@ function viewFichaTernero(id){
       <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Padre</div><div style="font-weight:600;">${t.padre?esc(t.padre):'—'}</div></div>
       <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Nacimiento</div><div style="font-weight:600;">${fmtFecha(t.fechaNacimiento)}</div></div>
       <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Estado salud</div><div style="font-weight:600;">${esc(t.estadoSalud)}</div></div>
-      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Registrado</div><div class="horaReg">${esc(t.horaRegistro||"—")}</div></div>
+      <div><div style="font-size:10.5px;text-transform:uppercase;color:var(--ink-faint);">Registrado</div><div class="horaReg">${esc(mostrarRegistro(t.horaRegistro))}</div></div>
     </div>
   </div>`;
 }
@@ -2051,7 +2111,7 @@ function bindPageEvents(path,params){
         updateBell();
       } else {
         if(btn){ btn.disabled=false; btn.textContent="Guardar evento"; }
-        toast("No se pudo guardar el evento.", {error:true});
+        toast("No se pudo guardar el evento: " + (r.error || "Error desconocido"), {error:true}); console.error("Error al registrar sanidad:",r.error);
       }
     };
   }
