@@ -582,7 +582,7 @@ async function guardarVaca(v){
   const r = await enviarASheets("insert", "Vacas",
     ["id","horaRegistro","arete","nombre","raza","fechaNacimiento","fechaIngreso","estadoProductivo","estadoReproductivo","estadoSanitario","observaciones"],
     [v.id,v.horaRegistro,v.arete,v.nombre,v.raza,v.fechaNacimiento,v.fechaIngreso,v.estadoProductivo,v.estadoReproductivo,v.estadoSanitario,v.observaciones]);
-  if(r.ok){ v.horaRegistro = r.data.horaRegistro || v.horaRegistro; VACAS.push(v); }
+  if(r.ok){ v.id=r.data.id; v.horaRegistro = r.data.horaRegistro || v.horaRegistro; VACAS.push(v); }
   return r;
 }
 async function guardarProduccion(p){
@@ -591,7 +591,7 @@ async function guardarProduccion(p){
   const r = await enviarASheets("insert", "Produccion",
     ["id","horaRegistro","fecha","vacaId","turno","litros","registradoPor","observaciones"],
     [p.id,p.horaRegistro,p.fecha,p.vacaId,p.turno,p.litros,p.registradoPor,p.observaciones]);
-  if(r.ok){ p.horaRegistro = r.data.horaRegistro || p.horaRegistro; PRODUCCION.push(p); }
+  if(r.ok){ p.id=r.data.id; p.horaRegistro = r.data.horaRegistro || p.horaRegistro; PRODUCCION.push(p); }
   return r;
 }
 async function guardarEntregaPIL(e){
@@ -600,16 +600,16 @@ async function guardarEntregaPIL(e){
   const r = await enviarASheets("insert", "EntregasPIL",
     ["id","horaRegistro","fecha","hora","litros","precioLitro","monto","comprobante","registradoPor","observaciones"],
     [e.id,e.horaRegistro,e.fecha,e.hora,e.litros,e.precioLitro,e.monto,e.comprobante,e.registradoPor,e.observaciones]);
-  if(r.ok){ e.horaRegistro = r.data.horaRegistro || e.horaRegistro; ENTREGAS_PIL.push(e); }
+  if(r.ok){ e.id=r.data.id; e.horaRegistro = r.data.horaRegistro || e.horaRegistro; ENTREGAS_PIL.push(e); }
   return r;
 }
 async function guardarEventoSanitario(ev){
   ev.id = ev.id || nextId("S");
   ev.horaRegistro = timestampAhora();
   const r = await enviarASheets("insert", "Sanidad",
-    ["id","horaRegistro","animalTipo","animalId","tipo","descripcion","responsable","costo","estado","observaciones","fecha"],
-    [ev.id,ev.horaRegistro,ev.animalTipo,ev.animalId,ev.tipo,ev.descripcion||"",ev.responsable||"",ev.costo||"",ev.estado||"",ev.observaciones||"",ev.fecha||""]);
-  if(r.ok){ ev.horaRegistro = r.data.horaRegistro || ev.horaRegistro; EVENTOS_SANITARIOS.push(ev); }
+    ["id","horaRegistro","fecha","animalTipo","animalId","tipo","descripcion","responsable","costo","estado","observaciones"],
+    [ev.id,ev.horaRegistro,ev.fecha||"",ev.animalTipo,ev.animalId,ev.tipo,ev.descripcion||"",ev.responsable||"",ev.costo||"",ev.estado||"",ev.observaciones||""]);
+  if(r.ok){ ev.id=r.data.id; ev.horaRegistro = r.data.horaRegistro || ev.horaRegistro; EVENTOS_SANITARIOS.push(ev); }
   return r;
 }
 async function guardarTernero(t){
@@ -618,7 +618,7 @@ async function guardarTernero(t){
   const r = await enviarASheets("insert", "Terneros",
     ["id","horaRegistro","arete","nombre","sexo","fechaNacimiento","madreId","padre","pesoNacimiento","pesoActual","estadoSalud","estado","observaciones"],
     [t.id,t.horaRegistro,t.arete,t.nombre,t.sexo,t.fechaNacimiento,t.madreId,t.padre||"",t.pesoNacimiento,t.pesoActual,t.estadoSalud,t.estado,t.observaciones]);
-  if(r.ok){ t.horaRegistro = r.data.horaRegistro || t.horaRegistro; TERNEROS.push(t); }
+  if(r.ok){ t.id=r.data.id; t.horaRegistro = r.data.horaRegistro || t.horaRegistro; TERNEROS.push(t); }
   return r;
 }
 async function guardarPesaje(p){
@@ -628,6 +628,7 @@ async function guardarPesaje(p){
     ["id","horaRegistro","terneroId","fecha","peso","observaciones"],
     [p.id,p.horaRegistro,p.terneroId,p.fecha,p.peso,p.observaciones||""]);
   if(r.ok){
+    p.id=r.data.id;
     p.horaRegistro = r.data.horaRegistro || p.horaRegistro;
     PESAJES_TERNEROS.push(p);
     const t = terneroById(p.terneroId);
@@ -652,7 +653,7 @@ function rutaPermitida(path){
 }
 
 function confirmacionRegistro(r, etiqueta){
-  const id = r && r.data && r.data.id;
+  const id = r?.data?.id || r?.id;
   toast(`${etiqueta} guardado correctamente. Número de registro: ${id || "no disponible"}.`, {registroId:id});
 }
 function toast(title, opts){
@@ -1420,7 +1421,7 @@ function vacaFormModal(existing){
         render();
       } else {
         if(btn){ btn.disabled=false; btn.textContent="Registrar vaca"; }
-        toast("No se pudo guardar en Sheets. Verificá conexión.", {error:true});
+        toast("No se pudo guardar: " + (r.error || "Verifica la conexión."), {error:true});
       }
     }
   };
@@ -1462,7 +1463,7 @@ function viewProduccionForm(){
         </div>
         <div class="form-row">
           <div class="f"><label>Turno</label><select name="turno" id="prodTurno"><option>mañana</option><option>tarde</option><option>noche</option></select></div>
-          <div class="f" id="f_plitros"><label>Litros <span class="req">*</span></label><input type="number" step="0.1" min="0" name="litros" id="prodLitros" placeholder="Ej: 9.5"><div class="err"></div></div>
+          <div class="f" id="f_plitros"><label>Litros <span class="req">*</span></label><input type="number" step="0.1" min="0" max="60" name="litros" id="prodLitros" placeholder="Ej: 9.5"><div class="err"></div></div>
         </div>
         <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--bg);"></div>
         <div class="f"><label>Observaciones</label><textarea name="observaciones"></textarea></div>
@@ -1782,7 +1783,7 @@ function terneroFormModal(existing){
         render();
       } else {
         if(btn){ btn.disabled=false; btn.textContent="Registrar ternero"; }
-        toast("No se pudo guardar en Sheets. Verificá conexión.", {error:true});
+        toast("No se pudo guardar: " + (r.error || "Verifica la conexión."), {error:true});
       }
     }
   };
@@ -2013,7 +2014,7 @@ function bindPageEvents(path,params){
       const vacaId=fd.get("vacaId"), litros=parseFloat(fd.get("litros"));
       let ok=true;
       ok=validateField(q("#f_pvaca"),!!vacaId,"Selecciona una vaca.")&&ok;
-      ok=validateField(q("#f_plitros"),!isNaN(litros)&&litros>=0,"Ingresa litros válidos.")&&ok;
+      ok=validateField(q("#f_plitros"),!isNaN(litros)&&litros>=0&&litros<=60,"Ingresa entre 0 y 60 litros por turno.")&&ok;
       if(!ok) return;
       const btn = q("button[type=submit]",e.target); if(btn){ btn.disabled=true; btn.textContent="Guardando..."; }
       const r = await guardarProduccion({fecha:fd.get("fecha"),vacaId,turno:fd.get("turno"),litros,registradoPor:fd.get("registradoPor"),observaciones:fd.get("observaciones").trim()});
@@ -2053,7 +2054,7 @@ function bindPageEvents(path,params){
         e.preventDefault();
         const fd=new FormData(e.target);
         const litros=parseFloat(fd.get("litros"));
-        if(!validateField(q("#f_pillitros"),!isNaN(litros)&&litros>=0,"Ingresa litros válidos.")) return;
+        if(!validateField(q("#f_pillitros"),!isNaN(litros)&&litros>=0&&litros<=60,"Ingresa entre 0 y 60 litros por turno.")) return;
         let precio;
         if(STATE.esEncargado){
           precio = STATE.precioLitro;
