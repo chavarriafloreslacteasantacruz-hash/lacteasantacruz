@@ -517,7 +517,6 @@ function eartag(t){ return `<span class="eartag">${esc(t)}</span>`; }
 
 async function enviarASheets(accion, tipo, encabezados, fila){
   try{
-    if(!apiCompatible) return {ok:false,error:"La API no está actualizada o no se pudo verificar. Publica la última versión de Apps Script y recarga la página."};
     const controller = new AbortController();
     const timeout = setTimeout(()=>controller.abort(),15000);
     let res;
@@ -541,7 +540,7 @@ async function cargarDesdeSheets(){
     const json = await res.json();
     if(!json.ok){ apiCompatible=false; console.warn("GET falló:", json.error); return false; }
     apiCompatible = json.revision === REVISION_API_REQUERIDA;
-    if(!apiCompatible){ console.error("API incompatible. Esperada:",REVISION_API_REQUERIDA,"Recibida:",json.revision); return false; }
+    if(!apiCompatible) console.warn("La API responde, pero su revisión es distinta; se permite lectura y se mantienen validaciones locales.",json.revision);
     const d = json.data || {};
 
     VACAS = (d.Vacas||[]).map(v=>({
