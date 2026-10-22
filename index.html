@@ -345,8 +345,8 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
 (function(){
 "use strict";
 
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxlL5ELLWhBQe0JPHHQNUm9bxrFedAtXyOL2YXXNAU98yfRcSqLFKkMZ4Rt5bdRaKZL/exec";
-const REVISION_API_REQUERIDA = "2026-10-20-VALIDACION-ARETES-V2";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbykzkfbQD12BBBKHuxwl3HS8pDDhdDq0q873OM5zJFkpRsdxEAHtrI8ZWFvbAPnZ7U-/exec";
+const REVISION_API_REQUERIDA = "2026-10-21-API-REPARADA";
 let apiCompatible = false;
 const RAZAS = ["Holstein","Girolando","Pardo Suizo","Gyr Lechero","Criolla"];
 const USUARIOS = [
@@ -2056,7 +2056,7 @@ function bindPageEvents(path,params){
         updateBell();
       } else {
         if(btn){ btn.disabled=false; btn.textContent="Guardar producción"; }
-        toast("No se pudo guardar. Verificá conexión.", {error:true});
+        toast("No se pudo guardar: " + (r.error || "Verifica la conexión."), {error:true});
       }
     };
   }
@@ -2081,7 +2081,7 @@ function bindPageEvents(path,params){
         e.preventDefault();
         const fd=new FormData(e.target);
         const litros=parseFloat(fd.get("litros"));
-        if(!validateField(q("#f_pillitros"),!isNaN(litros)&&litros>=0&&litros<=60,"Ingresa entre 0 y 60 litros por turno.")) return;
+        if(!validateField(q("#f_pillitros"),Number.isFinite(litros)&&litros>0,"Ingresa una cantidad válida de litros entregados, mayor que cero.")) return;
         let precio;
         if(STATE.esEncargado){
           precio = STATE.precioLitro;
@@ -2115,7 +2115,7 @@ function bindPageEvents(path,params){
           updateBell();
         } else {
           if(btn){ btn.disabled=false; btn.textContent="Guardar entrega"; }
-          toast("No se pudo guardar la entrega.", {error:true});
+          toast("No se pudo guardar la entrega: " + (r.error || "Verifica la conexión."), {error:true});
         }
       };
     }
