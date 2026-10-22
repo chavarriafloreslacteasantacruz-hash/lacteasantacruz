@@ -38,6 +38,7 @@
   --font-display:'Space Grotesk', sans-serif;--font-body:'Inter', sans-serif;--font-mono:'JetBrains Mono', monospace;
   --sidebar-w:264px;
 }
+*[hidden]{display:none!important;}
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{font-family:var(--font-body);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh;
@@ -662,6 +663,7 @@ async function guardarPesaje(p){
 
 const STATE = {
   user:null, role:"propietario", route:"#/dashboard",
+  filtrosDashboard:{desde:daysAgo(6),hasta:todayStr(),vacaId:"",categoria:"todas"},
   umbralDiferencia:30, costoPorLitro:1.2, precioLitro:3.90,
   get esPropietario(){ return this.role==="propietario"; },
   get esEncargado(){ return this.role==="encargado"; },
@@ -849,9 +851,50 @@ function render(){
     else if(path==="#/sanidad") renderLivePanel("sanidad");
   }catch(e){ console.error(e); c.innerHTML=`<div class="card"><h3>Error</h3><p>${esc(e.message)}</p></div>`; }
   bindPageEvents(path,params);
-  window.scrollTo(0,0);
+  if(path==="#/dashboard") aplicarCategoriaDashboard();
+  if(!render.conservarScroll) window.scrollTo(0,0);
   closeDrawer();
   updateBell();
+}
+
+function aplicarCategoriaDashboard(){
+  const c=q('#content');
+  if(!c || STATE.route!=='#/dashboard') return;
+  const categoria=STATE.filtrosDashboard.categoria;
+  const vacaSeleccionada=!!STATE.filtrosDashboard.vacaId;
+  // La categoría cambia las secciones visibles sin volver a calcular datos erróneamente.
+  const grupos={
+    'Análisis financiero':'finanzas', 'Producción y brecha':'produccion',
+    'Brecha producción':'pil', 'Alertas':'sanidad'
+  };
+  let grupo='inicio';
+  for(const el of Array.from(c.children)){
+    if(el.classList.contains('sec-title')){
+      const titulo=(el.textContent||'').trim();
+      grupo=Object.keys(grupos).find(t=>titulo.startsWith(t))||'otros';
+      grupo=grupos[grupo]||grupo;
+    }
+    let visible=categoria==='todas' || grupo==='inicio';
+    if(categoria==='produccion') visible=visible || grupo==='produccion'||grupo==='pil';
+    if(categoria==='pil') visible=visible || grupo==='pil';
+    if(categoria==='finanzas') visible=visible || grupo==='finanzas';
+    if(categoria==='sanidad') visible=visible || grupo==='sanidad';
+    if(categoria==='hato') visible=visible || (grupo==='finanzas' && el.classList.contains('charts-grid'));
+    // Las comparaciones globales no tienen sentido al seleccionar una sola vaca.
+    if(vacaSeleccionada && (grupo==='pil' || grupo==='finanzas')) visible=false;
+    el.hidden=!visible;
+  }
+  // En modo hato sólo se ve el panel de distribución, no el gráfico de producción vecino.
+  if(categoria==='hato'){
+    const paneles=Array.from(c.querySelectorAll('.chart-card'));
+    for(const card of paneles){
+      const titulo=card.querySelector('h3')?.textContent||'';
+      if(titulo.includes('Distribución del hato') || titulo.includes('Estado del hato')){
+        card.parentElement.hidden=false; card.hidden=false;
+        for(const sibling of Array.from(card.parentElement.children)) if(sibling!==card) sibling.hidden=true;
+      }
+    }
+  }
 }
 
 /* ============ GRÁFICOS ============ */
@@ -1133,29 +1176,60 @@ function renderLivePanel(tipo){
 /* ============ DASHBOARD ============ */
 function viewDashboard(){
   const hoy = todayStr();
-  const prodHoy = PRODUCCION.filter(p=>p.fecha===hoy).reduce((s,p)=>s+p.litros,0);
+  const filtros = STATE.filtrosDashboard;
+  const desde = filtros.desde || daysAgo(6);
+  const hasta = filtros.hasta || hoy;
+  const vacaSel = filtros.vacaId;
+  const vacasFiltradas = vacaSel ? VACAS.filter(v=>v.id===vacaSel) : VACAS;
+  const prodFiltrada = PRODUCCION.filter(p=>p.fecha>=desde && p.fecha<=hasta && (!vacaSel || p.vacaId===vacaSel));
+  // PIL es una entrega global: nunca atribuirla a una vaca individual.
+  const pilFiltradas = ENTREGAS_PIL.filter(e=>e.fecha>=desde && e.fecha<=hasta);
+  const sanidadFiltrada = EVENTOS_SANITARIOS.filter(e=>e.fecha>=desde && e.fecha<=hasta && (!vacaSel || (e.animalTipo==='vaca' && e.animalId===vacaSel)));
+  const diasGrafico = [];
+  const ini = new Date(desde+'T12:00:00');
+  const fin = new Date(hasta+'T12:00:00');
+  if(!isNaN(ini.getTime()) && !isNaN(fin.getTime()) && ini<=fin){
+    let actual=new Date(ini);
+    while(actual<=fin && diasGrafico.length<366){ diasGrafico.push(fechaLocal(actual)); actual.setDate(actual.getDate()+1); }
+  }
+  const ultimosDias = diasGrafico.slice(-31);
+  const esUnaVaca = !!vacaSel;
+  const avisoVaca = esUnaVaca ? `<div class="card" style="margin:12px 0;border-color:var(--warning);color:var(--ink-soft);font-size:12px;">Los datos de producción y del hato corresponden a la vaca seleccionada. <strong>Las entregas PIL son globales</strong> y no pueden atribuirse individualmente; las brechas e indicadores financieros comparativos se ocultan para evitar conclusiones incorrectas.</div>` : '';
+  const controlesDashboard = `<div class="card" style="margin-bottom:16px;">
+    <div style="font-weight:700;margin-bottom:12px;">🔎 Filtros del dashboard</div>
+    <div class="filters" style="align-items:flex-end;margin-bottom:4px;">
+      <label class="fdate"><span>Desde</span><input id="dbDesde" type="date" value="${esc(desde)}" max="${esc(hoy)}"></label>
+      <label class="fdate"><span>Hasta</span><input id="dbHasta" type="date" value="${esc(hasta)}" max="${esc(hoy)}"></label>
+      <label class="fdate"><span>Vaca</span><select id="dbVaca"><option value="">Todas las vacas</option>${VACAS.map(v=>`<option value="${esc(v.id)}" ${v.id===vacaSel?'selected':''}>${esc(v.nombre)} · ${esc(v.arete)}</option>`).join('')}</select></label>
+      <label class="fdate"><span>Categoría</span><select id="dbCategoria">${[['todas','Todas'],['produccion','Producción'],['pil','Entrega PIL'],['sanidad','Sanidad'],['hato','Hato'],['finanzas','Finanzas']].filter(x=>STATE.esPropietario || x[0]!=='finanzas').map(x=>`<option value="${x[0]}" ${filtros.categoria===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select></label>
+      <button type="button" class="btn btn-sm" id="dbLimpiar">Restablecer</button>
+    </div>
+    <div class="muted" style="font-size:11px;">Periodo: ${fmtFecha(desde)} – ${fmtFecha(hasta)} · Gráficos: hasta 31 días. Los estados del hato corresponden a la situación actual.</div>
+  </div>${avisoVaca}`;
 
-  const entregasHoy = ENTREGAS_PIL.filter(e=>e.fecha===hoy);
+  const prodHoy = prodFiltrada.filter(p=>p.fecha===hasta).reduce((s,p)=>s+p.litros,0);
+
+  const entregasHoy = pilFiltradas.filter(e=>e.fecha===hasta);
   const litrosPIL = entregasHoy.reduce((s,e)=>s+e.litros, 0);
   const huboEntregaHoy = entregasHoy.length > 0;
 
   const brechaHoy = +(prodHoy - litrosPIL).toFixed(1);
-  const enProd = VACAS.filter(v=>v.estadoProductivo==="produccion").length;
+  const enProd = vacasFiltradas.filter(v=>v.estadoProductivo==="produccion").length;
   const promedio = enProd ? prodHoy/enProd : 0;
-  const mastitis = VACAS.filter(v=>v.estadoSanitario==="mastitis").length;
-  const lesion = VACAS.filter(v=>v.estadoSanitario==="lesion").length;
+  const mastitis = vacasFiltradas.filter(v=>v.estadoSanitario==="mastitis").length;
+  const lesion = vacasFiltradas.filter(v=>v.estadoSanitario==="lesion").length;
 
-  const last7 = [...Array(7)].map((_,i)=>daysAgo(6-i));
+  const last7 = ultimosDias;
   const labels7 = last7.map(d=>fmtFecha(d).slice(0,5));
 
-  const prodSerie = last7.map(d => PRODUCCION.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0));
-  const pilSerie = last7.map(d => ENTREGAS_PIL.filter(x=>x.fecha===d).reduce((s,e)=>s+e.litros,0));
+  const prodSerie = last7.map(d => prodFiltrada.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0));
+  const pilSerie = last7.map(d => pilFiltradas.filter(x=>x.fecha===d).reduce((s,e)=>s+e.litros,0));
   const brechaSerie = last7.map((d,i) => +(prodSerie[i]-pilSerie[i]).toFixed(1));
 
   if(STATE.role==="propietario"){
-    const ingresoSerie = last7.map(d => ENTREGAS_PIL.filter(x=>x.fecha===d).reduce((s,e)=>s+(e.monto||0),0));
+    const ingresoSerie = last7.map(d => pilFiltradas.filter(x=>x.fecha===d).reduce((s,e)=>s+(e.monto||0),0));
     const costoSerie = last7.map(d => {
-      const litros = PRODUCCION.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0);
+      const litros = prodFiltrada.filter(p=>p.fecha===d).reduce((s,p)=>s+p.litros,0);
       return +(litros * STATE.costoPorLitro).toFixed(2);
     });
     const totalIngreso = ingresoSerie.reduce((s,x)=>s+x,0);
@@ -1171,26 +1245,27 @@ function viewDashboard(){
 
     return `
     <div class="page-head">
-      <div><h1>Dashboard</h1><p class="sub">Resumen financiero del día — ${fmtFecha(hoy)}</p></div>
+      <div><h1>Dashboard</h1><p class="sub">Resumen financiero · ${fmtFecha(desde)} a ${fmtFecha(hasta)}</p></div>
     </div>
 
+    ${controlesDashboard}
     <div class="grid grid-4">
-      <div class="card kpi"><div class="lbl">Producción hoy</div><div class="val">${numLitros(prodHoy)}</div><div class="delta">${enProd} vacas en producción</div></div>
-      <div class="card kpi"><div class="lbl">Entregado a PIL</div><div class="val">${numLitros(litrosPIL)}</div><div class="delta">${huboEntregaHoy ? numBs(ingresoHoy) : 'Sin registro hoy'}</div></div>
-      <div class="card kpi"><div class="lbl">Brecha del día</div><div class="val" style="color:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaHoy)}</div><div class="delta">Producción − Entrega PIL</div></div>
+      <div class="card kpi"><div class="lbl">Producción fecha final</div><div class="val">${numLitros(prodHoy)}</div><div class="delta">${enProd} vacas en producción</div></div>
+      <div class="card kpi"><div class="lbl">Entregado a PIL</div><div class="val">${esUnaVaca ? "—" : numLitros(litrosPIL)}</div><div class="delta">${huboEntregaHoy ? numBs(ingresoHoy) : 'Sin registro en fecha final'}</div></div>
+      <div class="card kpi"><div class="lbl">Brecha fecha final</div><div class="val" style="color:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${esUnaVaca ? "—" : numLitros(brechaHoy)}</div><div class="delta">Producción − Entrega PIL</div></div>
       <div class="card kpi"><div class="lbl">Promedio por vaca</div><div class="val">${numLitros(+promedio.toFixed(1))}</div><div class="delta">Litros / vaca</div></div>
     </div>
 
     <div class="card" style="margin-top:14px;">
-      <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 Margen estimado del día</div>
+      <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 Margen estimado de fecha final</div>
       <div class="grid grid-3">
-        <div class="kpi"><div class="lbl">Ingreso</div><div class="val">${numBs(ingresoHoy)}</div><div class="delta">${numLitros(litrosPIL)} entregados</div></div>
+        <div class="kpi"><div class="lbl">Ingreso</div><div class="val">${esUnaVaca ? "—" : numBs(ingresoHoy)}</div><div class="delta">${esUnaVaca ? "—" : numLitros(litrosPIL)} entregados</div></div>
         <div class="kpi"><div class="lbl">Costo estimado</div><div class="val">${numBs(costoHoy)}</div><div class="delta">${numLitros(prodHoy)} × ${numBs(STATE.costoPorLitro)}</div></div>
-        <div class="kpi"><div class="lbl">Margen</div><div class="val" style="color:${margenHoy<0?'var(--danger)':'var(--positive)'}">${numBs(margenHoy)}</div><div class="delta">Ingreso − Costo</div></div>
+        <div class="kpi"><div class="lbl">Margen</div><div class="val" style="color:${margenHoy<0?'var(--danger)':'var(--positive)'}">${esUnaVaca ? "—" : numBs(margenHoy)}</div><div class="delta">Ingreso − Costo</div></div>
       </div>
     </div>
 
-    <div class="sec-title"><h2>Análisis financiero (últimos 7 días)</h2></div>
+    <div class="sec-title"><h2>Análisis financiero (período seleccionado)</h2></div>
 
     <div class="charts-grid">
       <div class="card chart-card">
@@ -1202,15 +1277,15 @@ function viewDashboard(){
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
           ${svgDonut([
             {label:"En producción", value:enProd, color:"var(--positive)"},
-            {label:"En secado", value:VACAS.filter(v=>v.estadoProductivo==="secado").length, color:"var(--info)"},
-            {label:"Para descarte", value:VACAS.filter(v=>v.estadoProductivo==="descarte").length, color:"var(--warning)"},
-            {label:"No productiva", value:VACAS.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length, color:"var(--ink-faint)"},
-          ], VACAS.length)}
+            {label:"En secado", value:vacasFiltradas.filter(v=>v.estadoProductivo==="secado").length, color:"var(--info)"},
+            {label:"Para descarte", value:vacasFiltradas.filter(v=>v.estadoProductivo==="descarte").length, color:"var(--warning)"},
+            {label:"No productiva", value:vacasFiltradas.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length, color:"var(--ink-faint)"},
+          ], vacasFiltradas.length)}
           <div class="legend" style="flex-direction:column;gap:7px;">
             <span><i style="background:var(--positive)"></i>En producción (${enProd})</span>
-            <span><i style="background:var(--info)"></i>En secado (${VACAS.filter(v=>v.estadoProductivo==="secado").length})</span>
-            <span><i style="background:var(--warning)"></i>Para descarte (${VACAS.filter(v=>v.estadoProductivo==="descarte").length})</span>
-            <span><i style="background:var(--ink-faint)"></i>No productiva / sin clasificar (${VACAS.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length})</span>
+            <span><i style="background:var(--info)"></i>En secado (${vacasFiltradas.filter(v=>v.estadoProductivo==="secado").length})</span>
+            <span><i style="background:var(--warning)"></i>Para descarte (${vacasFiltradas.filter(v=>v.estadoProductivo==="descarte").length})</span>
+            <span><i style="background:var(--ink-faint)"></i>No productiva / sin clasificar (${vacasFiltradas.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length})</span>
           </div>
         </div>
         <div class="hr"></div>
@@ -1218,8 +1293,8 @@ function viewDashboard(){
         <div class="legend" style="gap:14px;">
           <span><i style="background:var(--danger)"></i>Mastitis (${mastitis})</span>
           <span><i style="background:var(--warning)"></i>Lesiones (${lesion})</span>
-          <span><i style="background:var(--positive)"></i>Sanas (${VACAS.filter(v=>v.estadoSanitario==="sana").length})</span>
-          <span><i style="background:var(--info)"></i>En tratamiento (${VACAS.filter(v=>v.estadoSanitario==="tratamiento").length})</span>
+          <span><i style="background:var(--positive)"></i>Sanas (${vacasFiltradas.filter(v=>v.estadoSanitario==="sana").length})</span>
+          <span><i style="background:var(--info)"></i>En tratamiento (${vacasFiltradas.filter(v=>v.estadoSanitario==="tratamiento").length})</span>
         </div>
       </div>
     </div>
@@ -1234,7 +1309,7 @@ function viewDashboard(){
         </div>
       </div>
       <div class="card chart-card">
-        <h3>Acumulado 7 días</h3><div class="sub">Totales del período</div>
+        <h3>Acumulado del período</h3><div class="sub">Totales del período</div>
         ${svgHBar([
           {label:"Ingreso", value:totalIngreso, color:"var(--positive)", fmt:numBs},
           {label:"Costo", value:totalCosto, color:"var(--danger)", fmt:numBs},
@@ -1270,18 +1345,19 @@ function viewDashboard(){
 
   return `
   <div class="page-head">
-    <div><h1>Dashboard</h1><p class="sub">Resumen productivo — ${fmtFecha(hoy)}</p></div>
+    <div><h1>Dashboard</h1><p class="sub">Resumen productivo · ${fmtFecha(desde)} a ${fmtFecha(hasta)}</p></div>
   </div>
 
+  ${controlesDashboard}
   <div class="grid grid-4">
-    <div class="card kpi"><div class="lbl">Producción hoy</div><div class="val">${numLitros(prodHoy)}</div><div class="delta">${enProd} vacas en producción</div></div>
-    <div class="card kpi"><div class="lbl">Entregado a PIL</div><div class="val">${numLitros(litrosPIL)}</div><div class="delta">Solo litros</div></div>
-    <div class="card kpi"><div class="lbl">Brecha del día</div><div class="val" style="color:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaHoy)}</div><div class="delta">Producción − Entrega PIL</div></div>
+    <div class="card kpi"><div class="lbl">Producción fecha final</div><div class="val">${numLitros(prodHoy)}</div><div class="delta">${enProd} vacas en producción</div></div>
+    <div class="card kpi"><div class="lbl">Entregado a PIL</div><div class="val">${esUnaVaca ? "—" : numLitros(litrosPIL)}</div><div class="delta">Solo litros</div></div>
+    <div class="card kpi"><div class="lbl">Brecha fecha final</div><div class="val" style="color:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${esUnaVaca ? "—" : numLitros(brechaHoy)}</div><div class="delta">Producción − Entrega PIL</div></div>
     <div class="card kpi"><div class="lbl">Alertas sanitarias</div><div class="val" style="color:${(mastitis+lesion)?'var(--danger)':'var(--ink)'}">${mastitis+lesion}</div><div class="delta">${mastitis} mastitis · ${lesion} lesión</div></div>
   </div>
 
   <div class="card" style="margin-top:14px;">
-    <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🥛 Producción → PIL → Brecha (hoy)</div>
+    <div class="lbl" style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🥛 Producción → PIL → Brecha (fecha final)</div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div style="background:var(--accent-bg);border:1px solid rgba(57,255,136,.35);border-radius:var(--radius-sm);padding:12px 18px;text-align:center;">
         <div style="font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--accent);">${numLitros(prodHoy)}</div>
@@ -1289,18 +1365,18 @@ function viewDashboard(){
       </div>
       <div style="font-size:20px;color:var(--ink-faint);">→</div>
       <div style="background:var(--info-bg);border:1px solid rgba(77,215,255,.35);border-radius:var(--radius-sm);padding:12px 18px;text-align:center;">
-        <div style="font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--info);">${numLitros(litrosPIL)}</div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--info);">${esUnaVaca ? "—" : numLitros(litrosPIL)}</div>
         <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;font-weight:600;">Entrega PIL</div>
       </div>
       <div style="font-size:20px;color:var(--ink-faint);">→</div>
       <div style="background:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger-bg)':'var(--warning-bg)'};border:1px solid ${Math.abs(brechaHoy)>STATE.umbralDiferencia?'rgba(255,92,122,.4)':'rgba(255,210,63,.35)'};border-radius:var(--radius-sm);padding:12px 18px;text-align:center;">
-        <div style="font-family:var(--font-mono);font-size:22px;font-weight:600;color:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--warning)'};">${numLitros(brechaHoy)}</div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:600;color:${Math.abs(brechaHoy)>STATE.umbralDiferencia?'var(--danger)':'var(--warning)'};">${esUnaVaca ? "—" : numLitros(brechaHoy)}</div>
         <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;font-weight:600;">Brecha</div>
       </div>
     </div>
   </div>
 
-  <div class="sec-title"><h2>Producción y brecha (últimos 7 días)</h2></div>
+  <div class="sec-title"><h2>Producción y brecha (período seleccionado)</h2></div>
 
   <div class="charts-grid">
     <div class="card chart-card">
@@ -1327,15 +1403,15 @@ function viewDashboard(){
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         ${svgDonut([
           {label:"En producción", value:enProd, color:"var(--positive)"},
-          {label:"Secado", value:VACAS.filter(v=>v.estadoProductivo==="secado").length, color:"var(--info)"},
-          {label:"Para descarte", value:VACAS.filter(v=>v.estadoProductivo==="descarte").length, color:"var(--warning)"},
-          {label:"No productiva", value:VACAS.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length, color:"var(--ink-faint)"},
-        ], VACAS.length)}
+          {label:"Secado", value:vacasFiltradas.filter(v=>v.estadoProductivo==="secado").length, color:"var(--info)"},
+          {label:"Para descarte", value:vacasFiltradas.filter(v=>v.estadoProductivo==="descarte").length, color:"var(--warning)"},
+          {label:"No productiva", value:vacasFiltradas.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length, color:"var(--ink-faint)"},
+        ], vacasFiltradas.length)}
         <div class="legend" style="flex-direction:column;gap:7px;">
           <span><i style="background:var(--positive)"></i>En producción (${enProd})</span>
-          <span><i style="background:var(--info)"></i>Secado (${VACAS.filter(v=>v.estadoProductivo==="secado").length})</span>
-          <span><i style="background:var(--warning)"></i>Para descarte (${VACAS.filter(v=>v.estadoProductivo==="descarte").length})</span>
-          <span><i style="background:var(--ink-faint)"></i>No productiva / sin clasificar (${VACAS.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length})</span>
+          <span><i style="background:var(--info)"></i>Secado (${vacasFiltradas.filter(v=>v.estadoProductivo==="secado").length})</span>
+          <span><i style="background:var(--warning)"></i>Para descarte (${vacasFiltradas.filter(v=>v.estadoProductivo==="descarte").length})</span>
+          <span><i style="background:var(--ink-faint)"></i>No productiva / sin clasificar (${vacasFiltradas.filter(v=>!["produccion","secado","descarte"].includes(v.estadoProductivo)).length})</span>
         </div>
       </div>
       <div class="hr"></div>
@@ -1343,8 +1419,8 @@ function viewDashboard(){
       <div class="legend" style="gap:14px;">
         <span><i style="background:var(--danger)"></i>Mastitis (${mastitis})</span>
         <span><i style="background:var(--warning)"></i>Lesiones (${lesion})</span>
-        <span><i style="background:var(--positive)"></i>Sanas (${VACAS.filter(v=>v.estadoSanitario==="sana").length})</span>
-        <span><i style="background:var(--info)"></i>En tratamiento (${VACAS.filter(v=>v.estadoSanitario==="tratamiento").length})</span>
+        <span><i style="background:var(--positive)"></i>Sanas (${vacasFiltradas.filter(v=>v.estadoSanitario==="sana").length})</span>
+        <span><i style="background:var(--info)"></i>En tratamiento (${vacasFiltradas.filter(v=>v.estadoSanitario==="tratamiento").length})</span>
       </div>
     </div>
   </div>
@@ -2003,7 +2079,34 @@ function doGlobalSearch(term){
 }
 
 /* ===== EVENTOS ===== */
+function actualizarDashboardFiltrado(){
+  const y=window.scrollY;
+  render.conservarScroll=true;
+  try{ render(); window.scrollTo(0,y); }
+  finally{ render.conservarScroll=false; }
+}
 function bindPageEvents(path,params){
+  if(path==='#/dashboard'){
+    const f=STATE.filtrosDashboard;
+    const fechaDesde=q('#dbDesde'), fechaHasta=q('#dbHasta');
+    const vaca=q('#dbVaca'), categoria=q('#dbCategoria');
+    if(fechaDesde && fechaHasta && vaca && categoria){
+      const aplicar=()=>{
+        const desde=fechaDesde.value, hasta=fechaHasta.value;
+        if(!desde || !hasta || desde>hasta){
+          toast('La fecha inicial no puede ser posterior a la fecha final.',{error:true}); return;
+        }
+        f.desde=desde;f.hasta=hasta;f.vacaId=vaca.value;f.categoria=categoria.value;
+        actualizarDashboardFiltrado();
+      };
+      [fechaDesde,fechaHasta,vaca,categoria].forEach(el=>el.addEventListener('change',aplicar));
+      q('#dbLimpiar').onclick=()=>{
+        Object.assign(f,{desde:daysAgo(6),hasta:todayStr(),vacaId:'',categoria:'todas'});
+        actualizarDashboardFiltrado();
+      };
+    }
+  }
+
   q("#content").onclick=function(e){
     const goto=e.target.closest("[data-goto]");
     if(goto){ navigate(goto.getAttribute("data-goto")); return; }
@@ -2271,15 +2374,21 @@ q("#loginBtn").onclick=async function(){
 let sincronizando = false;
 async function sincronizarVista(){
   if(!STATE.user || sincronizando || q("#modalRoot").children.length || document.hidden) return;
-  const ruta=currentRoute().path;
-  if(["#/produccion","#/sanidad","#/configuracion"].includes(ruta)) return;
+  // Nunca reconstruir formularios, historiales ni fichas durante la escritura/desplazamiento.
+  if(currentRoute().path!=="#/dashboard") return;
   if(document.activeElement && ["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) return;
   sincronizando=true;
-  try{ if(await cargarDesdeSheets()) render(); }
-  finally{ sincronizando=false; }
+  try{
+    const antes=JSON.stringify([VACAS,PRODUCCION,ENTREGAS_PIL,EVENTOS_SANITARIOS,TERNEROS,PESAJES_TERNEROS]);
+    const ok=await cargarDesdeSheets();
+    if(!ok || currentRoute().path!=="#/dashboard" || q("#modalRoot").children.length) return;
+    if(document.activeElement && ["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) return;
+    const despues=JSON.stringify([VACAS,PRODUCCION,ENTREGAS_PIL,EVENTOS_SANITARIOS,TERNEROS,PESAJES_TERNEROS]);
+    if(antes!==despues) actualizarDashboardFiltrado();
+  }finally{sincronizando=false;}
 }
-setInterval(sincronizarVista,30000);
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) sincronizarVista(); });
+setInterval(sincronizarVista,60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) sincronizarVista();});
 q("#hamburgerBtn").onclick=openDrawer;
 q("#drawerBg").onclick=closeDrawer;
 q("#bellBtn").onclick=function(){
