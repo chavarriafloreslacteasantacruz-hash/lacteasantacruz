@@ -858,42 +858,69 @@ function render(){
 }
 
 function aplicarCategoriaDashboard(){
-  const c=q('#content');
-  if(!c || STATE.route!=='#/dashboard') return;
-  const categoria=STATE.filtrosDashboard.categoria;
-  const vacaSeleccionada=!!STATE.filtrosDashboard.vacaId;
-  // La categoría cambia las secciones visibles sin volver a calcular datos erróneamente.
-  const grupos={
-    'Análisis financiero':'finanzas', 'Producción y brecha':'produccion',
-    'Brecha producción':'pil', 'Alertas':'sanidad'
+  const raiz=q('#content');
+  if(!raiz || STATE.route!=='#/dashboard') return;
+  const categoria=STATE.filtrosDashboard.categoria || 'todas';
+  const individual=!!STATE.filtrosDashboard.vacaId;
+  const propietario=STATE.esPropietario;
+  // Mostrar cada bloque por su contenido real, no sólo por el título de la sección.
+  // Así los gráficos de producción y hato del propietario no desaparecen al elegir una vaca.
+  const son={
+    finanzas:[/Margen estimado/i,/Ingreso vs Costo/i],
+    produccion:[/Producción diaria/i],
+    pil:[/Producción vs Entregado/i,/Brecha diaria/i],
+    hato:[/Distribución del hato/i,/Estado del hato/i],
+    sanidad:[/Eventos sanitarios por tipo/i,/Evolución de eventos sanitarios/i,/Resumen de eventos sanitarios/i]
   };
-  let grupo='inicio';
-  for(const el of Array.from(c.children)){
+  const coinciden=(el,tipos)=>tipos.some(tipo=>(son[tipo]||[]).some(rx=>rx.test(el.textContent||'')));
+  let seccion='inicio';
+  for(const el of Array.from(raiz.children)){
     if(el.classList.contains('sec-title')){
-      const titulo=(el.textContent||'').trim();
-      grupo=Object.keys(grupos).find(t=>titulo.startsWith(t))||'otros';
-      grupo=grupos[grupo]||grupo;
+      const titulo=el.textContent||'';
+      if(/Análisis financiero/i.test(titulo)) seccion='mixto';
+      else if(/Producción y brecha/i.test(titulo)) seccion='produccion';
+      else if(/Brecha producción/i.test(titulo)) seccion='pil';
+      else if(/Análisis sanitario/i.test(titulo)) seccion='sanidad';
+      else if(/Alertas/i.test(titulo)) seccion='alertas';
+      else seccion='otros';
+      el.hidden=categoria!=='todas' && !(categoria==='finanzas'&&seccion==='mixto'&&!individual) && !(categoria==='produccion'&&seccion==='produccion') && !(categoria==='pil'&&seccion==='pil'&&!individual) && !(categoria==='sanidad'&&(seccion==='sanidad'||seccion==='alertas')) && !(categoria==='hato'&&seccion==='mixto');
+      if(individual && (seccion==='pil'||(seccion==='mixto'&&categoria==='finanzas'))) el.hidden=true;
+      continue;
     }
-    let visible=categoria==='todas' || grupo==='inicio';
-    if(categoria==='produccion') visible=visible || grupo==='produccion'||grupo==='pil';
-    if(categoria==='pil') visible=visible || grupo==='pil';
-    if(categoria==='finanzas') visible=visible || grupo==='finanzas';
-    if(categoria==='sanidad') visible=visible || grupo==='sanidad';
-    if(categoria==='hato') visible=visible || (grupo==='finanzas' && el.classList.contains('charts-grid'));
-    // Las comparaciones globales no tienen sentido al seleccionar una sola vaca.
-    if(vacaSeleccionada && (grupo==='pil' || grupo==='finanzas')) visible=false;
-    el.hidden=!visible;
-  }
-  // En modo hato sólo se ve el panel de distribución, no el gráfico de producción vecino.
-  if(categoria==='hato'){
-    const paneles=Array.from(c.querySelectorAll('.chart-card'));
-    for(const card of paneles){
-      const titulo=card.querySelector('h3')?.textContent||'';
-      if(titulo.includes('Distribución del hato') || titulo.includes('Estado del hato')){
-        card.parentElement.hidden=false; card.hidden=false;
-        for(const sibling of Array.from(card.parentElement.children)) if(sibling!==card) sibling.hidden=true;
+    // Cabecera, controles de filtrado y explicación de vaca se conservan siempre.
+    if(seccion==='inicio' && (el.classList.contains('page-head') || el.querySelector('#dbVaca') || el.matches('[data-vaca-resumen]') || /Las entregas PIL son globales/.test(el.textContent||''))){el.hidden=false;continue;}
+    if(categoria==='todas'){
+      el.hidden=individual && (seccion==='pil' || (propietario && seccion==='mixto' && coinciden(el,['finanzas']) && !coinciden(el,['produccion','hato'])));
+      // Los gráficos se tratan individualmente para que la producción filtrada siga visible.
+    } else if(categoria==='finanzas') el.hidden=individual || !propietario || !coinciden(el,['finanzas']);
+    else if(categoria==='produccion') el.hidden=!coinciden(el,['produccion']) && !(seccion==='inicio' && el.classList.contains('grid'));
+    else if(categoria==='pil') el.hidden=individual || !coinciden(el,['pil']) && !(seccion==='inicio' && el.classList.contains('grid'));
+    else if(categoria==='hato') el.hidden=!coinciden(el,['hato']);
+    else if(categoria==='sanidad') el.hidden=!(seccion==='sanidad'||seccion==='alertas');
+    else el.hidden=false;
+    if(el.classList.contains('charts-grid')){
+      let visibles=0;
+      for(const card of Array.from(el.children)){
+        const titulo=card.querySelector('h3')?.textContent||'';
+        let mostrar=categoria==='todas' || (son[categoria]||[]).some(rx=>rx.test(titulo));
+        if(categoria==='sanidad') mostrar=seccion==='sanidad';
+        if(individual && (/Ingreso vs Costo|Acumulado del período|Producción vs Entregado|Brecha diaria/.test(titulo))) mostrar=false;
+        // La categoría finanzas excluye producción, hato y totales operativos.
+        if(categoria==='finanzas' && /Acumulado del período/.test(titulo)) mostrar=false;
+        card.hidden=!mostrar;
+        if(mostrar)visibles++;
       }
+      el.hidden=visibles===0;
     }
+  }
+  // Los títulos se muestran sólo cuando su bloque tiene contenido visible.
+  for(const titulo of Array.from(raiz.querySelectorAll(':scope > .sec-title'))){
+    if(titulo.hidden)continue;
+    let siguiente=titulo.nextElementSibling,hay=false;
+    while(siguiente && !siguiente.classList.contains('sec-title')){
+      if(!siguiente.hidden){hay=true;break;} siguiente=siguiente.nextElementSibling;
+    }
+    if(!hay)titulo.hidden=true;
   }
 }
 
@@ -989,6 +1016,10 @@ function svgDonut(segments, centerTitle){
     if(seg.value<=0) return;
     const frac=seg.value/total;
     const a0=angle, a1=angle+frac*360; angle=a1;
+    if(frac>=0.999999){
+      paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${sw}"><title>${seg.label}: ${seg.value}</title></circle>`;
+      return;
+    }
     const large=(a1-a0)>180?1:0;
     const p0=polar(cx,cy,r,a0), p1=polar(cx,cy,r,a1);
     paths+=`<path d="M ${p0.x} ${p0.y} A ${r} ${r} 0 ${large} 1 ${p1.x} ${p1.y}" fill="none" stroke="${seg.color}" stroke-width="${sw}"><title>${seg.label}: ${seg.value}</title></path>`;
@@ -1205,7 +1236,11 @@ function viewDashboard(){
       <button type="button" class="btn btn-sm" id="dbLimpiar">Restablecer</button>
     </div>
     <div class="muted" style="font-size:11px;">Periodo: ${fmtFecha(desde)} – ${fmtFecha(hasta)} · Gráficos: hasta 31 días. Los estados del hato corresponden a la situación actual.</div>
-  </div>${avisoVaca}`;
+  </div>${avisoVaca}${esUnaVaca ? `<div class="card" style="margin:12px 0;" data-vaca-resumen>
+    <h3>Resumen individual · ${esc(vacasFiltradas[0]?.nombre||'Vaca')}</h3>
+    <div class="legend"><span>Producción en período: ${numLitros(prodFiltrada.reduce((a,p)=>a+p.litros,0))}</span><span>Registros de ordeño: ${prodFiltrada.length}</span><span>Eventos sanitarios: ${sanidadFiltrada.filter(e=>/^\d{4}-\d{2}-\d{2}$/.test(e.fecha)).length}</span></div>
+    <p class="muted" style="margin-top:8px;font-size:12px;">Ingresos y entregas a PIL corresponden al establecimiento, no a una vaca.</p>
+  </div>` : ''}`;
 
   const prodHoy = prodFiltrada.filter(p=>p.fecha===hasta).reduce((s,p)=>s+p.litros,0);
 
@@ -1216,6 +1251,12 @@ function viewDashboard(){
   const brechaHoy = +(prodHoy - litrosPIL).toFixed(1);
   const enProd = vacasFiltradas.filter(v=>v.estadoProductivo==="produccion").length;
   const promedio = enProd ? prodHoy/enProd : 0;
+  // Excluir registros históricos desalineados que aún contienen valores como fecha="vaca".
+  const tiposSanidad = ['Vacuna contra garrapata','Vitaminización','Tratamiento de mastitis','Lesión física','Otro evento sanitario'];
+  const coloresSanidad = ['var(--info)','var(--positive)','var(--danger)','var(--warning)','var(--ink-faint)'];
+  const sanidadValida = sanidadFiltrada.filter(e=>/^\d{4}-\d{2}-\d{2}$/.test(e.fecha) && tiposSanidad.includes(e.tipo));
+  const sanidadPorTipo = tiposSanidad.map(t=>sanidadValida.filter(e=>e.tipo===t).length);
+  const totalSanidad = sanidadValida.length;
   const mastitis = vacasFiltradas.filter(v=>v.estadoSanitario==="mastitis").length;
   const lesion = vacasFiltradas.filter(v=>v.estadoSanitario==="lesion").length;
 
@@ -1337,7 +1378,25 @@ function viewDashboard(){
       </div>
     </div>
 
-    <div class="sec-title"><h2>Alertas</h2></div>
+    <div class="sec-title"><h2>Análisis sanitario (período seleccionado)</h2></div>
+    <div class="charts-grid">
+      <div class="card chart-card">
+        <h3>Eventos sanitarios por tipo</h3>
+        <div class="sub">Eventos registrados en el período${esUnaVaca?' · vaca seleccionada':''} (no representan animales distintos)</div>
+        ${svgDonut(tiposSanidad.map((nombre,i)=>({label:nombre,value:sanidadPorTipo[i],color:coloresSanidad[i]})), totalSanidad)}
+        <div class="legend" style="margin-top:10px;flex-direction:column;gap:6px;">
+          ${tiposSanidad.map((nombre,i)=>`<span><i style="background:${coloresSanidad[i]}"></i>${esc(nombre)} (${sanidadPorTipo[i]})</span>`).join('')}
+        </div>
+        ${!totalSanidad?'<p class="muted" style="margin-top:12px;font-size:12px;">Sin eventos sanitarios válidos en el período seleccionado.</p>':''}
+      </div>
+      <div class="card chart-card">
+        <h3>Evolución de eventos sanitarios</h3>
+        <div class="sub">Cantidad de eventos por día · según fecha del evento</div>
+        ${svgBarSingle(labels7, last7.map(d=>sanidadValida.filter(e=>e.fecha===d).length),{fmtLbl:n=>n})}
+      </div>
+    </div>
+
+        <div class="sec-title"><h2>Alertas</h2></div>
     <div class="card">
       ${computeAlerts().length ? computeAlerts().map(a=>`<div class="alert-item"><span class="dot"></span><span class="txt">${esc(a.text)}</span><span class="cnt">${a.count}</span></div>`).join("") : `<div class="empty-alerts">Sin alertas activas por el momento.</div>`}
     </div>`;
@@ -1425,7 +1484,25 @@ function viewDashboard(){
     </div>
   </div>
 
-  <div class="sec-title"><h2>Alertas sanitarias</h2></div>
+  <div class="sec-title"><h2>Análisis sanitario (período seleccionado)</h2></div>
+    <div class="charts-grid">
+      <div class="card chart-card">
+        <h3>Eventos sanitarios por tipo</h3>
+        <div class="sub">Eventos registrados en el período${esUnaVaca?' · vaca seleccionada':''} (no representan animales distintos)</div>
+        ${svgDonut(tiposSanidad.map((nombre,i)=>({label:nombre,value:sanidadPorTipo[i],color:coloresSanidad[i]})), totalSanidad)}
+        <div class="legend" style="margin-top:10px;flex-direction:column;gap:6px;">
+          ${tiposSanidad.map((nombre,i)=>`<span><i style="background:${coloresSanidad[i]}"></i>${esc(nombre)} (${sanidadPorTipo[i]})</span>`).join('')}
+        </div>
+        ${!totalSanidad?'<p class="muted" style="margin-top:12px;font-size:12px;">Sin eventos sanitarios válidos en el período seleccionado.</p>':''}
+      </div>
+      <div class="card chart-card">
+        <h3>Evolución de eventos sanitarios</h3>
+        <div class="sub">Cantidad de eventos por día · según fecha del evento</div>
+        ${svgBarSingle(labels7, last7.map(d=>sanidadValida.filter(e=>e.fecha===d).length),{fmtLbl:n=>n})}
+      </div>
+    </div>
+
+      <div class="sec-title"><h2>Alertas sanitarias</h2></div>
   <div class="card">
     ${computeAlerts().length ? computeAlerts().map(a=>`<div class="alert-item"><span class="dot"></span><span class="txt">${esc(a.text)}</span><span class="cnt">${a.count}</span></div>`).join("") : `<div class="empty-alerts">Sin alertas activas por el momento.</div>`}
   </div>`;
