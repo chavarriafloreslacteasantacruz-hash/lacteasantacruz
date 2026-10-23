@@ -310,6 +310,10 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
         <label>Usuario</label>
         <select id="userSelect"></select>
       </div>
+      <div class="field"><label for="passwordInput">Contraseña</label>
+        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Contraseña del perfil" required>
+      </div>
+      <p id="loginError" role="alert" style="display:none;color:var(--danger);font-size:12px;margin-bottom:12px;"></p>
       <button class="btn-primary" id="loginBtn">Entrar al sistema</button>
     </div>
   </div>
@@ -346,8 +350,9 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
 (function(){
 "use strict";
 
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxlL5ELLWhBQe0JPHHQNUm9bxrFedAtXyOL2YXXNAU98yfRcSqLFKkMZ4Rt5bdRaKZL/exec";
-const REVISION_API_REQUERIDA = "2026-10-21-API-REPARADA";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbz7ql7-bbnyujviqPuGZrXpiPf-tD-_fWQDeN04yPr1zVyNoKub80c3mVnU0DPFkhQo/exec";
+const REVISION_API_REQUERIDA = "2026-10-23-LOGIN-V1";
+let authToken = "";
 let apiCompatible = false;
 const RAZAS = ["Holstein","Girolando","Pardo Suizo","Gyr Lechero","Criolla"];
 const USUARIOS = [
@@ -525,10 +530,11 @@ async function enviarASheets(accion, tipo, encabezados, fila){
       signal:controller.signal,
       method:"POST",
       headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify({ accion: accion||"insert", tipo, encabezados, fila, id: String(fila[0]) })
+      body: JSON.stringify({ accion: accion||"insert", tipo, encabezados, fila, id: String(fila[0]), token: authToken })
     }); } finally { clearTimeout(timeout); }
     const json = await res.json();
     if(json && json.ok) return {ok:true, data:json};
+    if(/sesi[oó]n|autentic/i.test(String(json?.error||""))) logout();
     return {ok:false, error:(json && json.error) || "Respuesta no OK"};
   }catch(err){
     return {ok:false, error:err && err.name==='AbortError' ? 'Tiempo de espera agotado (15 segundos). Verifica la implementación de Apps Script y consulta si el registro llegó a Sheets antes de reintentarlo.' : String(err)};
@@ -537,9 +543,17 @@ async function enviarASheets(accion, tipo, encabezados, fila){
 
 async function cargarDesdeSheets(){
   try{
-    const res = await fetch(URL_APPS_SCRIPT + "?t=" + Date.now());
+    if(!authToken) throw new Error("Debes iniciar sesión.");
+    const res = await fetch(URL_APPS_SCRIPT, {
+      method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({accion:"read",token:authToken})
+    });
     const json = await res.json();
-    if(!json.ok){ apiCompatible=false; console.warn("GET falló:", json.error); return false; }
+    if(!json.ok){
+      apiCompatible=false; console.warn("Lectura falló:", json.error);
+      if(/sesi[oó]n|autentic/i.test(String(json.error||"")) && STATE.user){ logout(); }
+      return false;
+    }
     apiCompatible = json.revision === REVISION_API_REQUERIDA;
     if(!apiCompatible) console.warn("La API responde, pero su revisión es distinta; se permite lectura y se mantienen validaciones locales.",json.revision);
     const d = json.data || {};
@@ -795,7 +809,14 @@ function renderSidebar(){
 }
 function openDrawer(){ q("#drawer").classList.add("show"); q("#drawerBg").classList.add("show"); }
 function closeDrawer(){ q("#drawer").classList.remove("show"); q("#drawerBg").classList.remove("show"); }
-function logout(){ STATE.user=null; q("#app").classList.remove("on"); q("#screen-login").style.display="flex"; location.hash=""; }
+function logout(){
+  const token = authToken; authToken=""; STATE.user=null;
+  VACAS=[]; PRODUCCION=[]; ENTREGAS_PIL=[]; EVENTOS_SANITARIOS=[]; TERNEROS=[]; PESAJES_TERNEROS=[];
+  q("#app").classList.remove("on"); q("#screen-login").style.display="flex";
+  q("#passwordInput").value=""; location.hash="";
+  if(token) fetch(URL_APPS_SCRIPT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({accion:"logout",token})}).catch(()=>{});
+}
 function navigate(h){ location.hash=h; }
 
 function computeAlerts(){
@@ -2428,25 +2449,36 @@ qa(".role-opt",q("#rolePicker")).forEach(opt=>{
 q("#loginBtn").onclick=async function(){
   const role=q(".role-opt.active",q("#rolePicker")).getAttribute("data-role");
   const userId=q("#userSelect").value;
-  STATE.role=role;
-  STATE.user=USUARIOS.find(u=>u.id===userId)||USUARIOS.find(u=>u.rol===role);
-  if(!STATE.user){ toast("No hay usuario seleccionado.", {error:true}); return; }
-  const btn=q("#loginBtn"); btn.disabled=true; btn.textContent="Cargando datos...";
-  q("#screen-login").style.display="none";
-  q("#app").classList.add("on");
-  q("#content").innerHTML=`<div class="card" style="text-align:center;padding:40px;">
-    <div style="font-size:32px;margin-bottom:12px;">⏳</div>
-    <h3>Cargando datos desde Google Sheets...</h3>
-    <p class="muted" style="margin-top:6px;">Esto puede tardar unos segundos.</p>
-  </div>`;
-  const ok = await cargarDesdeSheets();
-  btn.disabled=false; btn.textContent="Entrar al sistema";
-  if(!ok){
-    toast("No se pudieron cargar los datos desde Sheets. No se mostrarán datos actualizados; verifica la conexión antes de registrar.", {error:true});
-  }
-  location.hash="#/dashboard";
-  render();
+  const pass=q("#passwordInput").value;
+  const err=q("#loginError"); err.style.display="none";
+  if(!pass){err.textContent="Introduce tu contraseña.";err.style.display="block";return;}
+  const btn=q("#loginBtn"); btn.disabled=true; btn.textContent="Verificando contraseña...";
+  try{
+    const response=await fetch(URL_APPS_SCRIPT,{
+      method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({accion:"login",usuarioId:userId,contrasena:pass})
+    });
+    const json=await response.json();
+    if(!json.ok||!json.token) throw Error(json.error||"No se pudo autenticar.");
+    if(json.rol!==role||json.usuarioId!==userId) throw Error("El servidor devolvió un perfil inesperado.");
+    authToken=json.token;
+    STATE.role=json.rol;
+    STATE.user=USUARIOS.find(u=>u.id===json.usuarioId);
+    if(!STATE.user) throw Error("Usuario no configurado en este dashboard.");
+    q("#passwordInput").value="";
+    btn.textContent="Cargando datos...";
+    const ok=await cargarDesdeSheets();
+    if(!ok) throw Error("La sesión inició, pero no se pudieron cargar los registros.");
+    q("#screen-login").style.display="none";
+    q("#app").classList.add("on");
+    location.hash="#/dashboard"; render();
+  }catch(e){
+    if(authToken){const t=authToken;authToken="";fetch(URL_APPS_SCRIPT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({accion:"logout",token:t})}).catch(()=>{});}
+    STATE.user=null;
+    err.textContent=String(e.message||e); err.style.display="block";
+  }finally{btn.disabled=false;btn.textContent="Entrar al sistema";}
 };
+q("#passwordInput").addEventListener("keydown",e=>{if(e.key==="Enter")q("#loginBtn").click();});
 
 let sincronizando = false;
 async function sincronizarVista(){
