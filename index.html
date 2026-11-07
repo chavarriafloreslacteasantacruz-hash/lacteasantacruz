@@ -372,6 +372,7 @@ tbody tr:hover{background:rgba(57,255,136,.05);}
       </div>
       <p id="loginError" role="alert" style="display:none;color:var(--danger);font-size:12px;margin-bottom:12px;"></p>
       <button class="btn-primary" id="loginBtn">Entrar al sistema</button>
+      <a class="help-login" href="manual-control-lechero.pdf" target="_blank" rel="noopener noreferrer" aria-label="Abrir manual de ayuda en PDF">❔ Ayuda · Manual de uso (PDF)</a>
     </div>
   </div>
 </div>
@@ -853,6 +854,7 @@ function renderSidebar(){
     <div class="brand"><div class="mark">CL</div><div class="name">Control Lechero<span>${esc(STATE.role==='propietario'?'Panel del propietario':'Panel del encargado')}</span></div></div>
     <nav>${items}</nav>
     <div class="sidebar-foot">
+      <a class="help-menu" href="manual-control-lechero.pdf" target="_blank" rel="noopener noreferrer">❔ Ayuda · Manual (PDF)</a>
       <div class="userchip"><div class="av">${esc(STATE.user.nombre.split(" ").map(w=>w[0]).slice(0,2).join(""))}</div>
         <div class="who"><div class="n">${esc(STATE.user.nombre)}</div><div class="r">${esc(STATE.role==='propietario'?'Propietario':'Encargado')}</div></div></div>
       <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
