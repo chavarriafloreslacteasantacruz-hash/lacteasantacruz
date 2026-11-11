@@ -1734,7 +1734,7 @@ function viewProduccionForm(){
           <div class="f"><label>Fecha</label><input type="date" name="fecha" value="${hoy}" max="${hoy}"></div>
         </div>
         <div class="form-row">
-          <div class="f"><label>Turno</label><select name="turno" id="prodTurno"><option>mañana</option><option>tarde</option><option>noche</option></select></div>
+          <div class="f"><label>Turno</label><select name="turno" id="prodTurno"><option>mañana</option><option>tarde</option></select></div>
           <div class="f" id="f_plitros"><label>Litros <span class="req">*</span></label><input type="number" step="0.1" min="0" max="60" name="litros" id="prodLitros" placeholder="Ej: 9.5"><div class="err"></div></div>
         </div>
         <div class="f"><label>Registrado por</label><input name="registradoPor" value="${esc(STATE.user.nombre)}" readonly style="background:var(--bg);"></div>
@@ -1892,7 +1892,7 @@ function viewPIL(params){
     <thead><tr><th>Fecha</th><th>Hora</th><th class="tright">Litros</th><th class="tright">Precio</th><th class="tright">Monto</th><th>Comprobante</th><th>Hora de registro</th></tr></thead>
     <tbody>${entregasFiltradas.length? entregasFiltradas.map(e=>{
       return `<tr><td>${fmtFecha(e.fecha)}</td><td>${esc(mostrarHora(e.hora))}</td><td class="tright mono">${e.litros} L</td><td class="tright mono">${numBs(e.precioLitro||0)}</td><td class="tright mono">${numBs(e.monto||0)}</td><td class="mono">${esc(e.comprobante||'—')}</td><td class="horaReg">${esc(mostrarRegistro(e.horaRegistro))}</td></tr>`;
-    }).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
+    }).join("") : `<tr class="empty-row"><td colspan="8">${hayFiltro?'No hay entregas en ese rango de fechas.':'Aún no hay entregas registradas.'}</td></tr>`}</tbody>
   </table></div>
   `;
 
@@ -1963,8 +1963,8 @@ function viewSanidadHistorial(params){
     ${hayFiltro?`<a href="#/sanidad/historial" class="filter-reset">Limpiar filtro de fecha</a>`:""}
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Fecha</th><th>Animal</th><th>Evento</th><th>Responsable</th><th class="tright">Costo</th><th>Estado</th><th>Hora de registro</th></tr></thead>
-    <tbody>${list.length? list.map(e=>{ const a=e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId); return `<tr><td>${fmtFecha(e.fecha)}</td><td>${a?esc(a.nombre):'—'}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td><td class="horaReg">${esc(mostrarRegistro(e.horaRegistro))}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="7">${hayFiltro?'No hay eventos en ese rango de fechas.':'Aún no hay eventos sanitarios.'}</td></tr>`}</tbody>
+    <thead><tr><th>Fecha</th><th>Animal</th><th>Raza</th><th>Evento</th><th>Responsable</th><th class="tright">Costo</th><th>Estado</th><th>Hora de registro</th></tr></thead>
+    <tbody>${list.length? list.map(e=>{ const a=e.animalTipo==="vaca"?vacaById(e.animalId):terneroById(e.animalId); return `<tr><td>${fmtFecha(e.fecha)}</td><td>${a?esc(a.nombre):'—'}</td><td>${e.animalTipo==="vaca"&&a?esc(a.raza||"No registrada"):"—"}</td><td>${esc(e.tipo)}</td><td>${esc(e.responsable||'—')}</td><td class="tright mono">${numBs(e.costo||0)}</td><td>${e.estado==='activo'?tag('Activo','danger'):tag('Finalizado','neutral')}</td><td class="horaReg">${esc(mostrarRegistro(e.horaRegistro))}</td></tr>`;}).join("") : `<tr class="empty-row"><td colspan="8">${hayFiltro?'No hay eventos en ese rango de fechas.':'Aún no hay eventos sanitarios.'}</td></tr>`}</tbody>
   </table></div>`;
 }
 
@@ -2154,78 +2154,81 @@ function pesajeModal(terneroId){
 function viewReportes(params){
   if(!STATE.puedeVerFinanzas) return `<div class="card">Acceso restringido.</div>`;
   params=params||{};
-  const totalLitrosProd = PRODUCCION.reduce((s,p)=>s+p.litros,0);
-  const totalLitrosPIL = ENTREGAS_PIL.reduce((s,e)=>s+e.litros,0);
-  const totalIngreso = ENTREGAS_PIL.reduce((s,e)=>s+(e.monto||0),0);
-  const totalCosto = totalLitrosProd * STATE.costoPorLitro;
-  const totalMargen = totalIngreso - totalCosto;
-  const brechaTotal = totalLitrosProd - totalLitrosPIL;
-
-  const mes = /^\d{4}-\d{2}$/.test(params.mes||"") ? params.mes : monthStr();
-  const desde = /^\d{4}-\d{2}-\d{2}$/.test(params.desde||"") && params.desde.startsWith(mes) ? params.desde : "";
-  const hasta = /^\d{4}-\d{2}-\d{2}$/.test(params.hasta||"") && params.hasta.startsWith(mes) ? params.hasta : "";
-  const enRango = f => f.startsWith(mes) && (!desde || f>=desde) && (!hasta || f<=hasta);
-  const prodMes = PRODUCCION.filter(p=>enRango(p.fecha));
-  const pilMes = ENTREGAS_PIL.filter(e=>enRango(e.fecha));
-  const sanMes = EVENTOS_SANITARIOS.filter(e=>enRango(e.fecha));
-  const litrosProdMes = prodMes.reduce((s,p)=>s+p.litros,0);
-  const litrosPilMes = pilMes.reduce((s,e)=>s+e.litros,0);
-  const brechaMes = +(litrosProdMes - litrosPilMes).toFixed(1);
-  const ingresoMes = pilMes.reduce((s,e)=>s+(e.monto||0),0);
-  const costoMes = litrosProdMes * STATE.costoPorLitro;
-  const margenMes = ingresoMes - costoMes;
-  const costoSanMes = sanMes.reduce((s,e)=>s+(e.costo||0),0);
-
-  const diasMes = [...new Set([...prodMes.map(p=>p.fecha), ...pilMes.map(e=>e.fecha)])].sort();
-  const filasDiarias = diasMes.map(f=>{
-    const pDia = prodMes.filter(p=>p.fecha===f).reduce((s,p)=>s+p.litros,0);
-    const eDia = pilMes.filter(e=>e.fecha===f).reduce((s,e)=>s+e.litros,0);
-    return {fecha:f, prod:pDia, entrega:eDia, dif:+(pDia-eDia).toFixed(1)};
+  const mes=/^\d{4}-\d{2}$/.test(params.mes||"")?params.mes:monthStr();
+  const quincena=params.quincena==="2"?"2":"1";
+  const ultimoDia=new Date(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0).getDate();
+  const desde=mes+"-"+(quincena==="1"?"01":"16");
+  const hasta=mes+"-"+(quincena==="1"?"15":String(ultimoDia).padStart(2,"0"));
+  const enMes=f=>String(f||"").startsWith(mes);
+  const enQuincena=f=>String(f||"")>=desde&&String(f||"")<=hasta;
+  const sumar=(arr,campo)=>arr.reduce((a,x)=>a+(Number(x[campo])||0),0);
+  const prodMensual=PRODUCCION.filter(p=>enMes(p.fecha));
+  const pilMensual=ENTREGAS_PIL.filter(e=>enMes(e.fecha));
+  const litrosMensuales=sumar(prodMensual,"litros");
+  const entregasMensuales=sumar(pilMensual,"litros");
+  const ingresoMensual=sumar(pilMensual,"monto");
+  const costoMensual=litrosMensuales*STATE.costoPorLitro;
+  const margenMensual=ingresoMensual-costoMensual;
+  const brechaMensual=litrosMensuales-entregasMensuales;
+  const prod=prodMensual.filter(p=>enQuincena(p.fecha));
+  const pil=pilMensual.filter(e=>enQuincena(e.fecha));
+  const san=EVENTOS_SANITARIOS.filter(e=>enQuincena(e.fecha));
+  const litros=sumar(prod,"litros"), entregados=sumar(pil,"litros");
+  const ingreso=sumar(pil,"monto"), costo=litros*STATE.costoPorLitro;
+  const margen=ingreso-costo, brecha=litros-entregados, costoSan=sumar(san,"costo");
+  const fechas=[...new Set([...prod.map(p=>p.fecha),...pil.map(e=>e.fecha)])].sort();
+  const filas=fechas.map(fecha=>{
+    const producido=sumar(prod.filter(p=>p.fecha===fecha),"litros");
+    const entregado=sumar(pil.filter(e=>e.fecha===fecha),"litros");
+    return {fecha,producido,entregado,diferencia:producido-entregado};
   });
-
   return `
-  <div class="page-head"><div><h1>Reportes</h1><p class="sub">Análisis financiero y productivo acumulado</p></div></div>
+  <div class="page-head"><div><h1>Reportes</h1><p class="sub">Acumulado mensual y detalle quincenal</p></div></div>
+  <div class="filters">
+    <div class="month-picker"><span>Mes del reporte</span><input type="month" id="fMes" value="${esc(mes)}" max="${monthStr()}"></div>
+    <span class="muted" style="font-size:13px;">${esc(fmtMes(mes))}</span>
+  </div>
+  <div class="sec-title"><h2>Acumulado mensual — ${esc(fmtMes(mes))}</h2></div>
   <div class="grid grid-4">
-    <div class="card kpi"><div class="lbl">Litros producidos</div><div class="val">${numLitros(totalLitrosProd)}</div></div>
-    <div class="card kpi"><div class="lbl">Litros entregados</div><div class="val">${numLitros(totalLitrosPIL)}</div></div>
-    <div class="card kpi"><div class="lbl">Brecha acumulada</div><div class="val" style="color:${Math.abs(brechaTotal)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaTotal)}</div></div>
-    <div class="card kpi"><div class="lbl">Margen acumulado</div><div class="val" style="color:${totalMargen<0?'var(--danger)':'var(--positive)'}">${numBs(totalMargen)}</div></div>
+    <div class="card kpi"><div class="lbl">Litros producidos</div><div class="val">${numLitros(litrosMensuales)}</div></div>
+    <div class="card kpi"><div class="lbl">Litros entregados</div><div class="val">${numLitros(entregasMensuales)}</div></div>
+    <div class="card kpi"><div class="lbl">Brecha mensual</div><div class="val" style="color:${Math.abs(brechaMensual)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaMensual)}</div></div>
+    <div class="card kpi"><div class="lbl">Margen mensual</div><div class="val" style="color:${margenMensual<0?'var(--danger)':'var(--positive)'}">${numBs(margenMensual)}</div></div>
   </div>
   <div class="card" style="margin-top:14px;">
-    <h3 style="font-size:15px;margin-bottom:10px;">Resumen financiero</h3>
+    <h3 style="font-size:15px;margin-bottom:10px;">Resumen financiero mensual — ${esc(fmtMes(mes))}</h3>
     ${svgHBar([
-      {label:"Ingreso total", value:totalIngreso, color:"var(--positive)", fmt:numBs},
-      {label:"Costo total", value:totalCosto, color:"var(--danger)", fmt:numBs},
-      {label:"Margen total", value:Math.max(totalMargen,0), color:totalMargen<0?"var(--danger)":"var(--accent)", fmt:()=>numBs(totalMargen)},
+      {label:"Ingreso mensual",value:ingresoMensual,color:"var(--positive)",fmt:numBs},
+      {label:"Costo mensual",value:costoMensual,color:"var(--danger)",fmt:numBs},
+      {label:"Margen mensual",value:Math.max(margenMensual,0),color:margenMensual<0?"var(--danger)":"var(--accent)",fmt:()=>numBs(margenMensual)}
     ])}
   </div>
-  <div class="sec-title"><h2>Resumen mensual</h2></div>
+  <div class="sec-title"><h2>Resumen quincenal</h2></div>
   <div class="card">
-    <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px;">
-      <div class="month-picker"><span>Mes</span><input type="month" id="fMes" value="${esc(mes)}" max="${monthStr()}"></div>
-      <div class="fdate"><span>Desde (en el mes)</span><input type="date" id="reporteDesde" value="${esc(desde)}" min="${mes}-01" max="${todayStr()}"></div>
-      <div class="fdate"><span>Hasta (en el mes)</span><input type="date" id="reporteHasta" value="${esc(hasta)}" min="${mes}-01" max="${todayStr()}"></div>
-      <button type="button" class="btn btn-acc btn-sm" id="exportarResumenMensual">⬇ Exportar resumen CSV</button>
-      <div class="sub" style="padding-bottom:9px;">${esc(fmtMes(mes))}</div>
+    <div class="filters">
+      <div class="month-picker"><span>Quincena</span><select id="fQuincena">
+        <option value="1" ${quincena==="1"?"selected":""}>Primera (1–15)</option>
+        <option value="2" ${quincena==="2"?"selected":""}>Segunda (16–fin de mes)</option>
+      </select></div>
+      <button type="button" class="btn btn-acc btn-sm" id="exportarResumenMensual">⬇ Exportar quincena CSV</button>
+      <span class="muted" style="font-size:12px;">Del ${fmtFecha(desde)} al ${fmtFecha(hasta)}</span>
     </div>
     <div class="grid grid-4">
-      <div class="kpi"><div class="lbl">Litros producidos</div><div class="val">${numLitros(litrosProdMes)}</div></div>
-      <div class="kpi"><div class="lbl">Litros entregados</div><div class="val">${numLitros(litrosPilMes)}</div></div>
-      <div class="kpi"><div class="lbl">Brecha del mes</div><div class="val" style="color:${Math.abs(brechaMes)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brechaMes)}</div></div>
-      <div class="kpi"><div class="lbl">Margen del mes</div><div class="val" style="color:${margenMes<0?'var(--danger)':'var(--positive)'}">${numBs(margenMes)}</div></div>
+      <div class="kpi"><div class="lbl">Litros producidos</div><div class="val">${numLitros(litros)}</div></div>
+      <div class="kpi"><div class="lbl">Litros entregados</div><div class="val">${numLitros(entregados)}</div></div>
+      <div class="kpi"><div class="lbl">Brecha de la quincena</div><div class="val" style="color:${Math.abs(brecha)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${numLitros(brecha)}</div></div>
+      <div class="kpi"><div class="lbl">Margen de la quincena</div><div class="val" style="color:${margen<0?'var(--danger)':'var(--positive)'}">${numBs(margen)}</div></div>
     </div>
     <div class="hr"></div>
     <div class="grid grid-3">
-      <div class="kpi"><div class="lbl">Ingreso del mes</div><div class="val">${numBs(ingresoMes)}</div><div class="delta">${pilMes.length} entrega(s) a PIL</div></div>
-      <div class="kpi"><div class="lbl">Costo estimado</div><div class="val">${numBs(costoMes)}</div><div class="delta">${numLitros(litrosProdMes)} × ${numBs(STATE.costoPorLitro)}</div></div>
-      <div class="kpi"><div class="lbl">Costo sanitario</div><div class="val">${numBs(costoSanMes)}</div><div class="delta">${sanMes.length} evento(s)</div></div>
+      <div class="kpi"><div class="lbl">Ingreso de la quincena</div><div class="val">${numBs(ingreso)}</div><div class="delta">${pil.length} entrega(s) a PIL</div></div>
+      <div class="kpi"><div class="lbl">Costo estimado</div><div class="val">${numBs(costo)}</div><div class="delta">${numLitros(litros)} × ${numBs(STATE.costoPorLitro)}</div></div>
+      <div class="kpi"><div class="lbl">Costo sanitario</div><div class="val">${numBs(costoSan)}</div><div class="delta">${san.length} evento(s)</div></div>
     </div>
-    ${filasDiarias.length?`
-    <div class="hr"></div>
-    <div class="table-wrap"><table>
+    ${filas.length?`<div class="hr"></div><div class="table-wrap"><table>
       <thead><tr><th>Fecha</th><th class="tright">Producción</th><th class="tright">Entrega PIL</th><th class="tright">Diferencia</th></tr></thead>
-      <tbody>${filasDiarias.map(r=>`<tr><td>${fmtFecha(r.fecha)}</td><td class="tright mono">${r.prod} L</td><td class="tright mono">${r.entrega} L</td><td class="tright mono" style="font-weight:700;color:${Math.abs(r.dif)>STATE.umbralDiferencia?'var(--danger)':'var(--ink)'}">${r.dif} L</td></tr>`).join("")}</tbody>
-    </table></div>` : `<p class="muted" style="margin-top:14px;font-size:13px;">Sin movimientos registrados en ${esc(fmtMes(mes))}.</p>`}
+      <tbody>${filas.map(r=>`<tr><td>${fmtFecha(r.fecha)}</td><td class="tright mono">${numLitros(r.producido)}</td><td class="tright mono">${numLitros(r.entregado)}</td><td class="tright mono">${numLitros(r.diferencia)}</td></tr>`).join("")}</tbody>
+    </table></div>`:`<p class="muted" style="margin-top:14px;">No hay movimientos registrados en esta quincena.</p>`}
   </div>`;
 }
 
@@ -2472,19 +2475,9 @@ function bindPageEvents(path,params){
   }
 
   if(path==="#/reportes" && STATE.puedeVerFinanzas){
-    const mesInput=q("#fMes");
-    const aplicarReporte=()=>{
-      const p=new URLSearchParams();
-      const m=q("#fMes").value; if(m) p.set("mes",m);
-      const desde=q("#reporteDesde").value, hasta=q("#reporteHasta").value;
-      if(desde && desde.startsWith(m)) p.set("desde",desde);
-      if(hasta && hasta.startsWith(m)) p.set("hasta",hasta);
-      if(desde && hasta && desde>hasta){ toast("La fecha inicial no puede ser posterior a la final.",{error:true});return; }
-      navigate("#/reportes?"+p.toString());
-    };
-    if(mesInput) mesInput.onchange=()=>navigate("#/reportes?mes="+encodeURIComponent(mesInput.value));
-    q("#reporteDesde").onchange=aplicarReporte;
-    q("#reporteHasta").onchange=aplicarReporte;
+    const mesInput=q("#fMes"), quinInput=q("#fQuincena");
+    if(mesInput) mesInput.onchange=()=>navigate("#/reportes?mes="+encodeURIComponent(mesInput.value)+"&quincena="+encodeURIComponent(quinInput.value));
+    if(quinInput) quinInput.onchange=()=>navigate("#/reportes?mes="+encodeURIComponent(mesInput.value)+"&quincena="+encodeURIComponent(quinInput.value));
     q("#exportarResumenMensual").onclick=()=>exportarResumenMensual(params);
   }
 }
@@ -2492,8 +2485,10 @@ function bindPageEvents(path,params){
 function exportarResumenMensual(params){
   if(!STATE.puedeVerFinanzas) return;
   const mes=/^\d{4}-\d{2}$/.test(params.mes||"")?params.mes:monthStr();
-  const desde=params.desde&&params.desde.startsWith(mes)?params.desde:"";
-  const hasta=params.hasta&&params.hasta.startsWith(mes)?params.hasta:"";
+  const quincena=params.quincena==="2"?"2":"1";
+  const ultimoDia=new Date(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0).getDate();
+  const desde=mes+"-"+(quincena==="1"?"01":"16");
+  const hasta=mes+"-"+(quincena==="1"?"15":String(ultimoDia).padStart(2,"0"));
   const enRango=f=>f.startsWith(mes)&&(!desde||f>=desde)&&(!hasta||f<=hasta);
   const produccion=PRODUCCION.filter(p=>enRango(p.fecha));
   const entregas=ENTREGAS_PIL.filter(e=>enRango(e.fecha));
@@ -2512,7 +2507,7 @@ function exportarResumenMensual(params){
   const ingresoTotal=sumar(entregas,"monto"), costoTotal=prodTotal*STATE.costoPorLitro;
   const sanTotal=sumar(sanidad,"costo");
   const csv=[
-    ["Resumen mensual de Control Lechero",mes],
+    ["Resumen quincenal de Control Lechero",mes+" · quincena "+quincena],
     ["Desde",desde||mes+"-01"],["Hasta",hasta||"Fin del mes"],
     ["Nota","Costos y margen estimados; el costo sanitario se informa por separado y no se descuenta nuevamente"],
     ["Producción total (L)",prodTotal],["Entrega total (L)",pilTotal],
@@ -2522,9 +2517,9 @@ function exportarResumenMensual(params){
   ].map(row=>row.map(v=>{const s=String(v??"");return '"'+s.replace(/"/g,'""')+'"';}).join(";")).join("\r\n");
   const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob), a=document.createElement("a");
-  a.href=url; a.download=`resumen_lechero_${mes}.csv`; document.body.appendChild(a); a.click(); a.remove();
+  a.href=url; a.download=`resumen_lechero_${mes}_quincena_${quincena}.csv`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
-  toast("Resumen mensual exportado en CSV.");
+  toast("Resumen quincenal exportado en CSV.");
 }
 
 function debounce(fn,ms){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
